@@ -11,13 +11,25 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
 
 @Autonomous
-public class TrajectoryTest extends LinearOpMode {
+public class AsyncTrajectoryTest extends LinearOpMode {
 
     // Declaring hardware
     DcMotor frontLeft, frontRight, backLeft, backRight, lift1, lift2;
     Servo claw, arm;
     // Declaring trajectories
-    Trajectory test;
+    Trajectory test1;
+    Trajectory test2;
+
+    double liftSpeed = 0.5;
+    double lowLift = 15;
+    double mediumLift = 23;
+    double highLift = 33;
+    double circumferenceLift = 2 * Math.PI;
+    int liftTicks = (int) (250 / circumferenceLift);
+
+    // counting number of auton cones to measure height
+    int countCones = 0;
+
 
 
     public void runOpMode() throws InterruptedException {
@@ -32,7 +44,10 @@ public class TrajectoryTest extends LinearOpMode {
         // setting robot "drive" position to the start position above
         drive.setPoseEstimate(startPose);
 
-        test = drive.trajectoryBuilder(startPose)
+        test1 = drive.trajectoryBuilder(startPose)
+                .forward(10)
+                .build();
+        test2 = drive.trajectoryBuilder(startPose)
                 .forward(10)
                 .build();
 
@@ -66,7 +81,14 @@ public class TrajectoryTest extends LinearOpMode {
 
         waitForStart();
 
-        drive.followTrajectory(test);
+        drive.followTrajectory(test1);
+        liftConfig(3, false);
+        liftConfig(0, false);
+        drive.followTrajectory(test2);
+
+        drive.followTrajectory(test1);
+        whileMotorsActive();
+        liftConfig(3, false);
 
 
     }
@@ -76,7 +98,31 @@ public class TrajectoryTest extends LinearOpMode {
 
         }
     }
+    public void liftConfig(int height, boolean ifCone) throws InterruptedException {
+        int ticks = 0;
+        if (!ifCone) {
+            if (height == 3) {
+                ticks = (int) (liftTicks * highLift);
 
+            } else if (height == 2)  {
+                ticks = (int) (liftTicks * mediumLift);
+            } else if (height == 1) {
+                ticks = (int) (liftTicks * lowLift);
+            } else {
+                ticks = 0;
+            }
+        } else {
+            ticks = (int) (liftTicks * (10 - (1.5 * countCones)));
+            countCones++;
+        }
+
+        lift1.setTargetPosition(ticks);
+        lift2.setTargetPosition(ticks);
+        lift1.setPower(liftSpeed);
+        lift2.setPower(liftSpeed);
+        lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    }
 
 
 }

@@ -58,7 +58,7 @@ public class RRRight40PtCycleAuton extends LinearOpMode {
     public static int loadY = -36;
     public static int initParkX = 34;
     public static int parkX = 34 + (signalZonePos - 2) * 12;
-    public static int parkY = 31;
+    public static int parkY = depositY;
 
     // Declaring trajectories
     Trajectory toPreload;
@@ -113,13 +113,11 @@ public class RRRight40PtCycleAuton extends LinearOpMode {
                 .lineTo(new Vector2d(depositX, depositY))
                 .addDisplacementMarker(() -> drive.followTrajectoryAsync(toAlignment))
                 .build();
-        toAlignment = drive.trajectoryBuilder(toDeposit.end())
-                .lineTo(new Vector2d(depositX + 5, depositY))
-                .strafeTo(new Vector2d(initParkX, parkY))
-                .addDisplacementMarker(() -> drive.followTrajectoryAsync(toPark))
-                .build();
         toPark = drive.trajectoryBuilder(toDeposit.end())
+                .lineTo(new Vector2d(depositX + 5, depositY))
+                .strafeTo(new Vector2d(initParkX, depositY))
                 .lineTo(new Vector2d(parkX, parkY))
+                .addDisplacementMarker(() -> drive.followTrajectoryAsync(toPark))
                 .build();
 
 
@@ -201,8 +199,18 @@ public class RRRight40PtCycleAuton extends LinearOpMode {
             whileMotorsActive();
 
 
+
             // LOOP ENDS
         }
+
+        Thread.sleep(250);
+        claw.setPosition(openClaw);
+
+        liftConfig(0, true);
+
+        drive.followTrajectory(toPark);
+        claw.setPosition(closedClaw);
+
     }
 
     public void whileMotorsActive() {
