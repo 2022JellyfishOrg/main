@@ -1,54 +1,21 @@
 package org.firstinspires.ftc.teamcode;
 
-import org.opencv.core.Core;
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Rect;
-import org.opencv.core.Scalar;
-import org.opencv.imgproc.Imgproc;
-import org.openftc.easyopencv.OpenCvPipeline;
-import com.acmerobotics.dashboard.config.Config;
-import org.firstinspires.ftc.teamcode.compfiles.Detector;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.teamcode.compfiles.Detector;
+import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
-
-import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.openftc.easyopencv.OpenCvWebcam;
 
-/* drive.trajectorySequenceBuilder(new Pose2d(34.5, -61, 0))
-                                .lineTo(new Vector2d(34, -12))
-                                .waitSeconds(3)
-                                .forward(20)
-                                .waitSeconds(2)
-                                .back(20)
-                                .waitSeconds(3)
-                                .forward(20)
-                                .waitSeconds(2)
-                                .back(20)
-                                .waitSeconds(2)
-                                .forward(20)
-                                .waitSeconds(2)
-                                .back(20)
-                                .strafeRight(24)
-                                .back(24)
-                                .build()
-
- */
 @Autonomous
 public class RRRight40PtCycleAuton extends LinearOpMode {
 
@@ -68,7 +35,8 @@ public class RRRight40PtCycleAuton extends LinearOpMode {
     int frontArm = 0;
     int cycles = 3;
 
-    // lift height values
+    // lift height/speed values
+    double liftSpeed = 0.5;
     double lowLift = 15;
     double mediumLift = 23;
     double highLift = 33;
@@ -135,6 +103,7 @@ public class RRRight40PtCycleAuton extends LinearOpMode {
                 .build();
         toLoad = drive.trajectoryBuilder(toPreload.end())
                 .lineTo(new Vector2d(loadX, loadY))
+                .addDisplacementMarker(() -> drive.followTrajectoryAsync(toDeposit))
                 .build();
         toDeposit = drive.trajectoryBuilder(toLoad.end())
                 .lineTo(new Vector2d(depositX, depositY))
@@ -212,8 +181,9 @@ public class RRRight40PtCycleAuton extends LinearOpMode {
             // reset lift to auton cone height
             liftConfig(notApplicable, true);
 
-            // drive to auton cones (THIS IS THE ONLY PATH THAT'S SYNCHRONOUS, meaning you don't perform other actions while driving)
+            // drive to auton cones
             drive.followTrajectory(toLoad);
+            whileMotorsActive();
 
             // grab cone
             Thread.sleep(250);
@@ -221,41 +191,24 @@ public class RRRight40PtCycleAuton extends LinearOpMode {
 
             // moving cone up BEFORE following path
             liftConfig(3, false);
-            Thread.sleep(500);
+            Thread.sleep(250);
 
             // start rotating arm
             armPresets(backArm);
 
             // Go back to deposit
             drive.followTrajectory(toDeposit);
+            whileMotorsActive();
+
 
             // LOOP ENDS
         }
+    }
 
+    public void whileMotorsActive() {
+        while (frontLeft.isBusy() || frontRight.isBusy() || backLeft.isBusy() || backRight.isBusy()) {
 
-
-
-
-
-
-
-
-        for (int i = 0; i < 3; i++) {
-            drive.followTrajectory(toDeposit);
-            liftConfig(3, false);
-            armPresets(125);
-            Thread.sleep(1000);
-            claw.setPosition(0.53);
-            armPresets(0);
-            liftConfig(0, true);
-            drive.followTrajectory(toLoad);
-            Thread.sleep(500);
-            claw.setPosition(1);
-            Thread.sleep(500);
         }
-
-
-
     }
     public void liftConfig(int height, boolean ifCone) throws InterruptedException {
         int ticks = 0;
@@ -271,13 +224,14 @@ public class RRRight40PtCycleAuton extends LinearOpMode {
                 ticks = 0;
             }
         } else {
-            ticks = (int) (liftTicks * (5 - (0.6 * countCones)));
+            ticks = (int) (liftTicks * (10 - (1.5 * countCones)));
+            countCones++;
         }
 
         lift1.setTargetPosition(ticks);
         lift2.setTargetPosition(ticks);
-        lift1.setPower(1);
-        lift2.setPower(1);
+        lift1.setPower(liftSpeed);
+        lift2.setPower(liftSpeed);
         lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
