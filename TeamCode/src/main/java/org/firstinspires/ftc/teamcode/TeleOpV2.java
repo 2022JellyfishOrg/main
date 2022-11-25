@@ -1,13 +1,19 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.ColorRangeSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.I2cAddr;
+import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.checkerframework.checker.units.qual.C;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.drive.StandardTrackingWheelLocalizer;
 
 @TeleOp
@@ -35,10 +41,17 @@ public class TeleOpV2 extends LinearOpMode {
     DcMotor lift2;
 
     Servo claw;
+    BNO055IMU imu;
 
 
     @Override
     public void runOpMode() throws InterruptedException {
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+        // Technically this is the default, however specifying it is clearer
+        parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
+        // Without this, data retrieving from the IMU throws an exception
+        imu.initialize(parameters);
 
 
         frontLeft = hardwareMap.get(DcMotor.class, "fl");
@@ -50,6 +63,7 @@ public class TeleOpV2 extends LinearOpMode {
         lift2 = hardwareMap.get(DcMotor.class, "lift1");
 
         claw = hardwareMap.get(Servo.class, "claw");
+        // sensor = hardwareMap.get(ColorRangeSensor. class, "sensor");
 
         frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -124,6 +138,7 @@ public class TeleOpV2 extends LinearOpMode {
             } else {
                 turnDenom = 0.2;
             }
+
             double y = gamepad1.left_stick_y * denominator;// Remember, this is reversed!
             double x = -gamepad1.left_stick_x * 1.1 * denominator; // Counteract imperfect strafing
             double rx = -gamepad1.right_stick_x * turnDenom; // turning
@@ -138,6 +153,26 @@ public class TeleOpV2 extends LinearOpMode {
             backLeft.setPower(backLeftPower);
             frontRight.setPower(frontRightPower);
             backRight.setPower(backRightPower);
+
+            // field centric:
+            /* double botHeading = -imu.getAngularOrientation().firstAngle;
+
+            double rotX = x * Math.cos(botHeading) - y * Math.sin(botHeading);
+            double rotY = x * Math.sin(botHeading) + y * Math.cos(botHeading);
+
+            // Denominator is the largest motor power (absolute value) or 1
+            // This ensures all the powers maintain the same ratio, but only when
+            // at least one is out of the range [-1, 1]
+            double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
+            double frontLeftPower = (rotY + rotX + rx) / denominator;
+            double backLeftPower = (rotY - rotX + rx) / denominator;
+            double frontRightPower = (rotY - rotX - rx) / denominator;
+            double backRightPower = (rotY + rotX - rx) / denominator;
+
+            frontLeft.setPower(frontLeftPower);
+            backLeft.setPower(backLeftPower);
+            frontRight.setPower(frontRightPower);
+            backRight.setPower(backRightPower); */
 
             // A, A
             /*
@@ -230,6 +265,8 @@ public class TeleOpV2 extends LinearOpMode {
                 if (lift1.getCurrentPosition() > liftTicks * highLift) {
                     speed = 0.3;
                 }
+
+
                 //claw.setPosition(1);
                 // ticks = (ticks per inch)(# of inches)
                 int ticks = (int) (liftTicks * highLift);

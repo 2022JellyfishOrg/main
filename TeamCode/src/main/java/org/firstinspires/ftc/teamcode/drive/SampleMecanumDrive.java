@@ -23,6 +23,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
@@ -68,11 +69,29 @@ public class SampleMecanumDrive extends MecanumDrive {
 
     private TrajectoryFollower follower;
 
-    private DcMotorEx frontLeft, backLeft, backRight, frontRight;
+    public DcMotorEx frontLeft, backLeft, backRight, frontRight, lift1, lift2;
+    public Servo arm, claw;
     private List<DcMotorEx> motors;
 
     private BNO055IMU imu;
     private VoltageSensor batteryVoltageSensor;
+
+    public static int countCones = 0;
+    double openClaw = 0.53;
+    double closedClaw = 1;
+
+    // arm open/closed values
+    int backArm = 125;
+    int frontArm = 0;
+    int cycles = 3;
+
+    // lift height/speed values
+    double liftSpeed = 0.5;
+    double lowLift = 15;
+    double mediumLift = 23;
+    double highLift = 33;
+    double circumferenceLift = 2 * Math.PI;
+    int liftTicks = (int) (250 / circumferenceLift);
 
     public SampleMecanumDrive(HardwareMap hardwareMap) {
         super(kV, kA, kStatic, TRACK_WIDTH, TRACK_WIDTH, LATERAL_MULTIPLIER);
@@ -120,6 +139,12 @@ public class SampleMecanumDrive extends MecanumDrive {
         backLeft = hardwareMap.get(DcMotorEx.class, "backLeft");
         backRight = hardwareMap.get(DcMotorEx.class, "backRight");
         frontRight = hardwareMap.get(DcMotorEx.class, "frontRight");
+        lift1 = hardwareMap.get(DcMotorEx.class, "lift1");
+        lift2 = hardwareMap.get(DcMotorEx.class, "lift2");
+
+        claw = hardwareMap.get(Servo.class, "claw");
+        arm = hardwareMap.get(Servo.class, "arm");
+
 
         motors = Arrays.asList(frontLeft, backLeft, backRight, frontRight);
 
@@ -167,6 +192,53 @@ public class SampleMecanumDrive extends MecanumDrive {
                 VEL_CONSTRAINT, ACCEL_CONSTRAINT,
                 MAX_ANG_VEL, MAX_ANG_ACCEL
         );
+    }
+
+    public void liftConfig(int height, boolean ifCone) {
+        int ticks = 0;
+        if (!ifCone) {
+            if (height == 3) {
+                ticks = (int) (liftTicks * highLift);
+
+            } else if (height == 2)  {
+                ticks = (int) (liftTicks * mediumLift);
+            } else if (height == 1) {
+                ticks = (int) (liftTicks * lowLift);
+            } else {
+                ticks = 0;
+            }
+        } else {
+            ticks = (int) (liftTicks * (10 - (1.5 * countCones)));
+        }
+
+        lift1.setTargetPosition(ticks);
+        lift2.setTargetPosition(ticks);
+        lift1.setPower(liftSpeed);
+        lift2.setPower(liftSpeed);
+        lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    }
+
+    public void armPresets(int degrees) {
+        if (degrees > 180) {
+            arm.setPosition(2/3);
+        } else {
+            arm.setPosition(degrees / 180 * 2/3);
+        }
+
+    }
+
+    public void clawOpen() {
+        claw.setPosition(0.53);
+    }
+    public void clawClose() {
+        claw.setPosition(1);
+    }
+
+    public void whileMotorsActive() {
+        while (frontLeft.isBusy() || frontRight.isBusy() || backLeft.isBusy() || backRight.isBusy()) {
+
+        }
     }
 
     public void turnAsync(double angle) {

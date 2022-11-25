@@ -82,47 +82,17 @@ public class AsyncTrajectoryTest extends LinearOpMode {
         waitForStart();
 
         drive.followTrajectory(test1);
-        liftConfig(3, false);
-        liftConfig(0, false);
+        drive.liftConfig(3, false);
+        drive.liftConfig(0, false);
         drive.followTrajectory(test2);
 
         drive.followTrajectory(test1);
-        whileMotorsActive();
-        liftConfig(3, false);
+        drive.whileMotorsActive();
+        drive.liftConfig(3, false);
 
 
     }
 
-    public void whileMotorsActive() {
-        while (frontLeft.isBusy() || frontRight.isBusy() || backLeft.isBusy() || backRight.isBusy()) {
-
-        }
-    }
-    public void liftConfig(int height, boolean ifCone) throws InterruptedException {
-        int ticks = 0;
-        if (!ifCone) {
-            if (height == 3) {
-                ticks = (int) (liftTicks * highLift);
-
-            } else if (height == 2)  {
-                ticks = (int) (liftTicks * mediumLift);
-            } else if (height == 1) {
-                ticks = (int) (liftTicks * lowLift);
-            } else {
-                ticks = 0;
-            }
-        } else {
-            ticks = (int) (liftTicks * (10 - (1.5 * countCones)));
-            countCones++;
-        }
-
-        lift1.setTargetPosition(ticks);
-        lift2.setTargetPosition(ticks);
-        lift1.setPower(liftSpeed);
-        lift2.setPower(liftSpeed);
-        lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-    }
 
 
 }
