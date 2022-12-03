@@ -19,13 +19,13 @@ public class LiftTestRR extends LinearOpMode {
 
         while (opModeIsActive()) {
             drive.liftConfig(3, false);
-            sleep(500);
+            Thread.sleep(500);
             drive.liftConfig(0, false);
-            sleep(500);
+            Thread.sleep(500);
             drive.liftConfig(0, true);
-            sleep(500);
+            Thread.sleep(500);
             drive.liftConfig(0, false);
-            sleep(500);
+            Thread.sleep(500);
         }
 
 

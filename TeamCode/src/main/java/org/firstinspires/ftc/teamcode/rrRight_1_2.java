@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.teamcode.compfiles.Detector;
+import org.firstinspires.ftc.teamcode.Detector;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
@@ -109,7 +109,7 @@ public class rrRight_1_2 extends LinearOpMode {
 
         // move lift to high (0 is reset, 1 is low, 2 is medium, 3 is high))
         // ifCone represents if lift is picking up auton cone or depositing (true: auton cone, false: depositing)
-        drive.liftConfig(3, false);
+       // drive.liftConfig(3, false);
 
         // rotate arm to back
         drive.armPresets(backArm);

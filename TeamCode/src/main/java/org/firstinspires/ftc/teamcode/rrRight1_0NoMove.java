@@ -19,7 +19,7 @@ import org.firstinspires.ftc.teamcode.AprilTagDetectionPipeline;
 import java.util.ArrayList;
 
 @Autonomous
-public class rrRight1_0 extends LinearOpMode {
+public class rrRight1_0NoMove extends LinearOpMode {
 
     // vision position detection
     private static int signalZonePos;
@@ -132,8 +132,8 @@ public class rrRight1_0 extends LinearOpMode {
         telemetry.addData("zone", signalZonePos);
         telemetry.update();
 
-        drive.followTrajectory(toAlign);
-        drive.followTrajectory(toPark);
+//        drive.followTrajectory(toAlign);
+//        drive.followTrajectory(toPark);
 
     }
 

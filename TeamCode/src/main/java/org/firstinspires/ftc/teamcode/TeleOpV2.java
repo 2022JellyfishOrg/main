@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.roadrunner.drive.MecanumDrive;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -11,10 +12,12 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.checkerframework.checker.units.qual.C;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.drive.StandardTrackingWheelLocalizer;
+import org.firstinspires.ftc.teamcode.drive.TwoWheelTrackingLocalizer;
 
 @TeleOp
 public class TeleOpV2 extends LinearOpMode {
@@ -24,7 +27,15 @@ public class TeleOpV2 extends LinearOpMode {
     double ticksPerRevolution = 537.6;
     int liftTicks = (int) (250 / circumferenceLift);  // variable value because of inconsistencies
     double turnDenom = 0.8;
-    double denominator = 0.5;
+    double denominator = 0.8;
+    double openClaw = 0;
+    double closedClaw = 0.5;
+    boolean armInUse = false;
+    double armForwardPos = 0;
+    double armSidewayPos = 0.05;
+    double armBackwardPos = 0.1;
+    ElapsedTime time = new ElapsedTime();
+
 
 
     int signalZonePos = 0;
@@ -33,14 +44,9 @@ public class TeleOpV2 extends LinearOpMode {
     double lowLift = 14.2;
     double mediumLift = 23;
     double highLift = 32.5;
-    DcMotor backLeft;
-    DcMotor backRight;
-    DcMotor frontLeft;
-    DcMotor frontRight;
-    DcMotor lift1;
-    DcMotor lift2;
+    DcMotor backLeft, backRight, frontLeft, frontRight, lift1, lift2;
 
-    Servo claw;
+    Servo claw, arm;
     BNO055IMU imu;
 
 
@@ -63,6 +69,7 @@ public class TeleOpV2 extends LinearOpMode {
         lift2 = hardwareMap.get(DcMotor.class, "lift1");
 
         claw = hardwareMap.get(Servo.class, "claw");
+        arm = hardwareMap.get(Servo.class, "arm");
         // sensor = hardwareMap.get(ColorRangeSensor. class, "sensor");
 
         frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -83,21 +90,16 @@ public class TeleOpV2 extends LinearOpMode {
 
         frontRight.setDirection(DcMotor.Direction.REVERSE);
         backRight.setDirection(DcMotor.Direction.REVERSE);
+        claw.setDirection(Servo.Direction.REVERSE);
 
-
-        StandardTrackingWheelLocalizer myLocalizer = new StandardTrackingWheelLocalizer(hardwareMap);
+        double res;
 
         waitForStart();
+        time.reset();
 
         while (opModeIsActive()) {
-            myLocalizer.update();
 
             // Retrieve your pose
-            Pose2d myPose = myLocalizer.getPoseEstimate();
-
-            telemetry.addData("x", myPose.getX());
-            telemetry.addData("y", myPose.getY());
-            telemetry.addData("heading", myPose.getHeading());
 
             if (lift1.getCurrentPosition() == 0) {
                 lift1.setPower(0);
@@ -139,8 +141,12 @@ public class TeleOpV2 extends LinearOpMode {
                 turnDenom = 0.2;
             }
 
+
+
+
+
             double y = gamepad1.left_stick_y * denominator;// Remember, this is reversed!
-            double x = -gamepad1.left_stick_x * 1.1 * denominator; // Counteract imperfect strafing
+            double x = gamepad1.left_stick_x * 1.1 * denominator; // Counteract imperfect strafing
             double rx = -gamepad1.right_stick_x * turnDenom; // turning
 
             double frontLeftPower = (y + x + rx);
@@ -154,10 +160,15 @@ public class TeleOpV2 extends LinearOpMode {
             frontRight.setPower(frontRightPower);
             backRight.setPower(backRightPower);
 
-            // field centric:
-            /* double botHeading = -imu.getAngularOrientation().firstAngle;
 
-            double rotX = x * Math.cos(botHeading) - y * Math.sin(botHeading);
+
+
+
+            // field centric:
+
+           /* double botHeading = -imu.getAngularOrientation().firstAngle + 90;
+
+            double rotX = (x * Math.cos(botHeading) - y * Math.sin(botHeading));
             double rotY = x * Math.sin(botHeading) + y * Math.cos(botHeading);
 
             // Denominator is the largest motor power (absolute value) or 1
@@ -172,7 +183,9 @@ public class TeleOpV2 extends LinearOpMode {
             frontLeft.setPower(frontLeftPower);
             backLeft.setPower(backLeftPower);
             frontRight.setPower(frontRightPower);
-            backRight.setPower(backRightPower); */
+            backRight.setPower(backRightPower);
+
+            */
 
             // A, A
             /*
@@ -188,9 +201,8 @@ public class TeleOpV2 extends LinearOpMode {
 
             if ((gamepad1.a && !lastA)) {
                 direction = !direction;
-                double res = 1;
                 if (!direction) {
-                    res = 0.53;
+                    res = 0;
                 } else {
                     res = 1;
                 }
@@ -198,18 +210,23 @@ public class TeleOpV2 extends LinearOpMode {
             }
             lastA = gamepad1.a;
 
+            if (gamepad2.a) {
+                double temp = arm.getPosition();
+                arm.setPosition(0);
+                int sleep = (int)(Math.abs(temp) * 10000);
+                Thread.sleep(sleep);
 
-            /*
-            if (gamepad1.a) {
-                claw.setPosition(1);
+            } else if (gamepad2.x) {
+                double temp = arm.getPosition();
+                arm.setPosition(0.06);
+                int sleep = (int)(Math.abs(temp - 0.06) * 10000);
+                Thread.sleep(sleep);
+            } else if (gamepad2.y) {
+                double temp = arm.getPosition();
+                arm.setPosition(0.12);
+                int sleep = (int)(Math.abs(temp - 0.12) * 10000);
+                Thread.sleep(sleep);
             }
-            if (gamepad1.b) {
-                claw.setPosition(0.55);
-            }
-
-             */
-
-
 
 
             // lift macros
@@ -232,9 +249,9 @@ public class TeleOpV2 extends LinearOpMode {
                 lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-                Thread.sleep(250);
                 //claw.setPosition(1);
                 denominator = 0.35;
+
             } else if (gamepad2.dpad_left) {
                 double speed = 0.6;
                 if (lift1.getCurrentPosition() > liftTicks * mediumLift) {
@@ -253,10 +270,6 @@ public class TeleOpV2 extends LinearOpMode {
                 //claw.setPosition(1);
                 lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                Thread.sleep(250);
-                    /* while (lift.isBusy()) {
-
-                    } */
                 //claw.setPosition(1);
 
                 denominator = 0.35;
@@ -279,10 +292,6 @@ public class TeleOpV2 extends LinearOpMode {
 
                 lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                Thread.sleep(250);
-                     /* while (lift.isBusy()) {
-
-                    } */
                 //claw.setPosition(1);
 
                 denominator = 0.25;
@@ -291,7 +300,7 @@ public class TeleOpV2 extends LinearOpMode {
                 // resetting claw to closed
             } else if (gamepad2.dpad_right) { // resetting lift
                 // ticks = (ticks per inch)(# of inches)
-                claw.setPosition(0.53);
+                claw.setPosition(openClaw);
                 int ticks = 0;
                 lift1.setPower(0.5);
                 lift2.setPower(0.5);
@@ -300,11 +309,6 @@ public class TeleOpV2 extends LinearOpMode {
 
                 lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-                Thread.sleep(250);
-                    /* while (lift.isBusy()) {
-
-                    } */
 
                 denominator = 0.5;
                 // opening the claw
@@ -320,15 +324,15 @@ public class TeleOpV2 extends LinearOpMode {
 
                 lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                Thread.sleep(250);
-                    /* while (lift.isBusy()) {
-
-                    } */
 
                 denominator = 0.5;
                 // opening the claw
             }
 
+            if (time.seconds() >= 85) {
+                gamepad1.rumble(500);
+                gamepad2.rumble(500);
+            }
 
         }
     }

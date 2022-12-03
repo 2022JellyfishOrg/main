@@ -5,9 +5,10 @@ import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.teamcode.compfiles.Detector;
+import org.firstinspires.ftc.teamcode.Detector;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
@@ -22,9 +23,6 @@ public class rrRight_1_2_noDisplace extends LinearOpMode {
     // For lift method
     int notApplicable = 0;
 
-    // claw open/closed values
-    double openClaw = 0.53;
-    double closedClaw = 1;
 
     // arm open/closed values
     int backArm = 125;
@@ -40,7 +38,7 @@ public class rrRight_1_2_noDisplace extends LinearOpMode {
     public static int startPoseY = -61;
     public static int depositX = 24;
     public static int depositY = -12;
-    public static int loadX = 59;
+    public static int loadX = 54;
     public static int loadY = -12;
     public static int parkX = 34 + 24 * signalPosUpdate;
     public static int parkY = depositY;
@@ -52,6 +50,7 @@ public class rrRight_1_2_noDisplace extends LinearOpMode {
     Trajectory toDeposit;
     Trajectory toPark;
 
+    ElapsedTime time = new ElapsedTime();
     public void runOpMode() throws InterruptedException {
         telemetry.addLine("Initializing.");
 
@@ -158,7 +157,6 @@ public class rrRight_1_2_noDisplace extends LinearOpMode {
 
 
         drive.clawClose();
-
     }
 
 

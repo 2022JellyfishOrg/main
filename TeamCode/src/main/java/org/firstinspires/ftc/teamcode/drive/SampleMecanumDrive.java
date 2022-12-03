@@ -21,6 +21,7 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -53,8 +54,8 @@ import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kV;
  */
 @Config
 public class SampleMecanumDrive extends MecanumDrive {
-    public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(0, 0, 0);
-    public static PIDCoefficients HEADING_PID = new PIDCoefficients(0, 0, 0);
+    public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(0.35, 0, 0);
+    public static PIDCoefficients HEADING_PID = new PIDCoefficients(6, 0, 0);
 
     public static double LATERAL_MULTIPLIER = 1;
 
@@ -70,20 +71,15 @@ public class SampleMecanumDrive extends MecanumDrive {
     private TrajectoryFollower follower;
 
     public DcMotorEx frontLeft, backLeft, backRight, frontRight, lift1, lift2;
-    public Servo arm, claw;
+    public Servo claw, arm;
     private List<DcMotorEx> motors;
 
     private BNO055IMU imu;
     private VoltageSensor batteryVoltageSensor;
 
     public static int countCones = 0;
-    double openClaw = 0.53;
-    double closedClaw = 1;
-
-    // arm open/closed values
-    int backArm = 125;
-    int frontArm = 0;
-    int cycles = 3;
+    public static double openClaw = 0.53;
+    public static double closedClaw = 1;
 
     // lift height/speed values
     double liftSpeed = 0.5;
@@ -135,10 +131,10 @@ public class SampleMecanumDrive extends MecanumDrive {
         // For example, if +Y in this diagram faces downwards, you would use AxisDirection.NEG_Y.
         // BNO055IMUUtil.remapZAxis(imu, AxisDirection.NEG_Y);
 
-        frontLeft = hardwareMap.get(DcMotorEx.class, "frontLeft");
-        backLeft = hardwareMap.get(DcMotorEx.class, "backLeft");
-        backRight = hardwareMap.get(DcMotorEx.class, "backRight");
-        frontRight = hardwareMap.get(DcMotorEx.class, "frontRight");
+        frontLeft = hardwareMap.get(DcMotorEx.class, "fl");
+        backLeft = hardwareMap.get(DcMotorEx.class, "bl");
+        backRight = hardwareMap.get(DcMotorEx.class, "br");
+        frontRight = hardwareMap.get(DcMotorEx.class, "fr");
         lift1 = hardwareMap.get(DcMotorEx.class, "lift1");
         lift2 = hardwareMap.get(DcMotorEx.class, "lift2");
 
@@ -169,7 +165,8 @@ public class SampleMecanumDrive extends MecanumDrive {
         backLeft.setDirection(DcMotor.Direction.REVERSE);
 
         // TODO: if desired, use setLocalizer() to change the localization method
-        setLocalizer(new StandardTrackingWheelLocalizer(hardwareMap));
+        setLocalizer(new TwoWheelTrackingLocalizer(hardwareMap, this));
+        // setLocalizer(new StandardTrackingWheelLocalizer(hardwareMap));
 
         trajectorySequenceRunner = new TrajectorySequenceRunner(follower, HEADING_PID);
     }
@@ -195,6 +192,7 @@ public class SampleMecanumDrive extends MecanumDrive {
     }
 
     public void liftConfig(int height, boolean ifCone) {
+
         int ticks = 0;
         if (!ifCone) {
             if (height == 3) {
@@ -217,29 +215,34 @@ public class SampleMecanumDrive extends MecanumDrive {
         lift2.setPower(liftSpeed);
         lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+
     }
+
 
     public void armPresets(int degrees) {
         if (degrees > 180) {
-            arm.setPosition(2/3);
-        } else {
-            arm.setPosition(degrees / 180 * 2/3);
+            degrees = 180;
         }
+        arm.setPosition(degrees/180.0);
+
 
     }
 
-    public void clawOpen() {
-        claw.setPosition(0.53);
+   public void clawOpen() {
+        claw.setPosition(openClaw);
     }
     public void clawClose() {
-        claw.setPosition(1);
+        claw.setPosition(closedClaw);
     }
+
 
     public void whileMotorsActive() {
         while (frontLeft.isBusy() || frontRight.isBusy() || backLeft.isBusy() || backRight.isBusy()) {
-
         }
     }
+
+
 
     public void turnAsync(double angle) {
         trajectorySequenceRunner.followTrajectorySequenceAsync(
