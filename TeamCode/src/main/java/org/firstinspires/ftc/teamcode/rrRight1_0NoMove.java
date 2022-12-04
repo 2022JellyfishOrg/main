@@ -48,10 +48,6 @@ public class rrRight1_0NoMove extends LinearOpMode {
     int MIDDLE = 2;
     int RIGHT = 3;
     public int location = 0;
-    public int getLoc(){
-        return this.location;
-    }
-
 
     public void runOpMode() throws InterruptedException {
         telemetry.addLine("Initializing.");
@@ -119,6 +115,7 @@ public class rrRight1_0NoMove extends LinearOpMode {
         // setting robot "drive" position to the start position above
         drive.setPoseEstimate(startPose);
 
+        // the trajectories given coordinates
         toAlign = drive.trajectoryBuilder(startPose)
                 .strafeTo(new Vector2d(startPoseX, parkY))
                 .build();
@@ -126,9 +123,11 @@ public class rrRight1_0NoMove extends LinearOpMode {
                 .lineTo(new Vector2d(parkX, parkY))
                 .build();
 
+
         waitForStart();
 
-        signalZonePos = getLoc();
+        // detection
+        signalZonePos = location;
         telemetry.addData("zone", signalZonePos);
         telemetry.update();
 
