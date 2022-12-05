@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.comp;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
@@ -7,50 +7,24 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.teamcode.Detector;
+import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.openftc.apriltag.AprilTagDetection;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvWebcam;
-import org.firstinspires.ftc.teamcode.AprilTagDetectionPipeline;
 
 import java.util.ArrayList;
 
 @Autonomous
 public class rrRight1_0 extends LinearOpMode {
 
-    // vision position detection
-    private static int signalZonePos;
-
-    // Roadrunner coordinates:
-    public static int startPoseX = 37;
-    public static int startPoseY = -61;
-    public static int parkX = 34 + (signalZonePos - 1) * 24;
-    public static int parkY = -30;
-
     // Declaring trajectories
     Trajectory toAlign;
     Trajectory toPark;
-    org.firstinspires.ftc.teamcode.AprilTagDetectionPipeline aprilTagDetectionPipeline;
-    double fx = 578.272;
-    double fy = 578.272;
-    double cx = 402.145;
-    double cy = 221.506;
+    AprilTagDetectionPipeline aprilTagDetectionPipeline;
 
-    // UNITS ARE METERS
-    double tagsize = 0.166;
-
-    // Tag ID 1, 2, 3 from the 36h11 family
-    AprilTagDetection tagOfInterest = null;
-    int LEFT = 1;
-    int MIDDLE = 2;
-    int RIGHT = 3;
-    public int location = 0;
-    public int getLoc(){
-        return this.location;
-    }
 
 
     public void runOpMode() throws InterruptedException {
@@ -61,8 +35,7 @@ public class rrRight1_0 extends LinearOpMode {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
-        aprilTagDetectionPipeline = new AprilTagDetectionPipeline(tagsize, fx, fy, cx, cy);
-        //org.firstinspires.ftc.teamcode.auton.
+        aprilTagDetectionPipeline = new AprilTagDetectionPipeline(Constants.tagsize, Constants.fx, Constants.fy, Constants.cx, Constants.cy);
 
         webcam.setPipeline(aprilTagDetectionPipeline);
         webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
@@ -89,18 +62,18 @@ public class rrRight1_0 extends LinearOpMode {
 
                 for(AprilTagDetection tag : currentDetections)
                 {
-                    if(tag.id == LEFT || tag.id == MIDDLE || tag.id == RIGHT)
+                    if(tag.id == Constants.LEFT || tag.id == Constants.MIDDLE || tag.id == Constants.RIGHT)
                     {
-                        tagOfInterest = tag;
+                        Constants.tagOfInterest = tag;
                         tagFound = true;
-                        if(tag.id==LEFT){
-                            location = 0;
+                        if(tag.id==Constants.LEFT){
+                            Constants.location = 0;
 
-                        }else if(tag.id==MIDDLE){
-                            location = 1;
+                        }else if(tag.id==Constants.MIDDLE){
+                            Constants.location = 1;
 
-                        }else if(tag.id==RIGHT){
-                            location = 2;
+                        }else if(tag.id==Constants.RIGHT){
+                            Constants.location = 2;
                         }
                         break;
                     }
@@ -114,22 +87,21 @@ public class rrRight1_0 extends LinearOpMode {
         }
 
         // start position of robot (NEEDS TO BE ACCURATE TO ABOUT AN INCH OR LESS)
-        Pose2d startPose = new Pose2d(startPoseX, startPoseY, 0);
+        Pose2d startPose = new Pose2d(Constants.startPoseX, Constants.startPoseY, 0);
 
         // setting robot "drive" position to the start position above
         drive.setPoseEstimate(startPose);
 
         toAlign = drive.trajectoryBuilder(startPose)
-                .strafeTo(new Vector2d(startPoseX, parkY))
+                .strafeTo(new Vector2d(Constants.startPoseX, Constants.parkY))
                 .build();
         toPark = drive.trajectoryBuilder(toAlign.end())
-                .lineTo(new Vector2d(parkX, parkY))
+                .lineTo(new Vector2d(Constants.parkX, Constants.parkY))
                 .build();
 
         waitForStart();
 
-        signalZonePos = getLoc();
-        telemetry.addData("zone", signalZonePos);
+        telemetry.addData("zone", Constants.location);
         telemetry.update();
 
         drive.followTrajectory(toAlign);

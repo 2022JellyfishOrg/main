@@ -1,1 +1,0 @@
-Configuration: bl: , br: , fl, fr: , 

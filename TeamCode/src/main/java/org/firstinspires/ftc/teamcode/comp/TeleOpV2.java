@@ -1,50 +1,17 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.comp;
 
-import com.acmerobotics.roadrunner.drive.MecanumDrive;
-import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.ColorRangeSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.I2cAddr;
-import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.checkerframework.checker.units.qual.C;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.drive.StandardTrackingWheelLocalizer;
-import org.firstinspires.ftc.teamcode.drive.TwoWheelTrackingLocalizer;
+import org.firstinspires.ftc.teamcode.Constants;
 
 @TeleOp
 public class TeleOpV2 extends LinearOpMode {
-    double wheelDiameter = 3.77953;
-    double circumference = wheelDiameter * Math.PI * 0.513;
-    double circumferenceLift = 2 * Math.PI;
-    double ticksPerRevolution = 537.6;
-    int liftTicks = (int) (250 / circumferenceLift);  // variable value because of inconsistencies
-    double turnDenom = 0.8;
-    double denominator = 0.8;
-    double openClaw = 0;
-    double closedClaw = 1;
-    boolean armInUse = false;
-    double armForwardPos = 0.2597;
-    double armSidewayPos = 0.3148;
-    double armBackwardPos = 0.369;
     ElapsedTime time = new ElapsedTime();
-
-
-
-    int signalZonePos = 0;
-    boolean lastA = false;
-    boolean direction = true;
-    double lowLift = 7;
-    double mediumLift = 13;
-    double highLift = 19;
-    double sideConeLift = 6.3;
     DcMotor backLeft, backRight, frontLeft, frontRight, lift1, lift2;
 
     Servo claw, arm;
@@ -108,12 +75,12 @@ public class TeleOpV2 extends LinearOpMode {
                 lift1.setPower(0);
                 lift2.setPower(0);
             }
-            if (gamepad2.left_stick_y < 0 && lift1.getCurrentPosition() <= liftTicks * highLift + 50) {
+            if (gamepad2.left_stick_y < 0 && lift1.getCurrentPosition() <= Constants.liftTicks * Constants.highLift + 50) {
                 if (lift1.getPower() == 0) {
                     lift1.setPower(0.3);
                     lift2.setPower(0.3);
                 }
-                if (lift1.getCurrentPosition() <= liftTicks * highLift + 100) {
+                if (lift1.getCurrentPosition() <= Constants.liftTicks * Constants.highLift + 100) {
                     lift1.setTargetPosition(lift1.getCurrentPosition() + 60);
                     lift2.setTargetPosition(lift2.getCurrentPosition() + 60);
                     lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -134,23 +101,23 @@ public class TeleOpV2 extends LinearOpMode {
 
             }
 
-            if (lift1.getCurrentPosition() < liftTicks * lowLift) {
-                turnDenom = 1;
-            } else if (lift1.getCurrentPosition() < liftTicks * mediumLift) {
-                turnDenom = 0.3;
-            } else if (lift1.getCurrentPosition() < liftTicks * highLift) {
-                turnDenom = 0.3;
+            if (lift1.getCurrentPosition() < Constants.liftTicks * Constants.lowLift) {
+                Constants.turnDenom = 1;
+            } else if (lift1.getCurrentPosition() < Constants.liftTicks * Constants.mediumLift) {
+                Constants.turnDenom = 0.3;
+            } else if (lift1.getCurrentPosition() < Constants.liftTicks * Constants.highLift) {
+                Constants.turnDenom = 0.3;
             } else {
-                turnDenom = 0.2;
+                Constants.turnDenom = 0.2;
             }
 
 
 
 
 
-            double y = gamepad1.left_stick_y * denominator;// Remember, this is reversed!
-            double x = -gamepad1.left_stick_x * 1.1 * denominator; // Counteract imperfect strafing
-            double rx = gamepad1.right_stick_x * turnDenom; // turning
+            double y = gamepad1.left_stick_y * Constants.denominator;// Remember, this is reversed!
+            double x = -gamepad1.left_stick_x * 1.1 * Constants.denominator; // Counteract imperfect strafing
+            double rx = gamepad1.right_stick_x * Constants.turnDenom; // turning
 
             double frontLeftPower = (y + x + rx);
             double backLeftPower = (y - x + rx);
@@ -174,14 +141,14 @@ public class TeleOpV2 extends LinearOpMode {
             double rotX = (x * Math.cos(botHeading) - y * Math.sin(botHeading));
             double rotY = x * Math.sin(botHeading) + y * Math.cos(botHeading);
 
-            // Denominator is the largest motor power (absolute value) or 1
+            // Constants.denominator is the largest motor power (absolute value) or 1
             // This ensures all the powers maintain the same ratio, but only when
             // at least one is out of the range [-1, 1]
-            double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-            double frontLeftPower = (rotY + rotX + rx) / denominator;
-            double backLeftPower = (rotY - rotX + rx) / denominator;
-            double frontRightPower = (rotY - rotX - rx) / denominator;
-            double backRightPower = (rotY + rotX - rx) / denominator;
+            double Constants.denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
+            double frontLeftPower = (rotY + rotX + rx) / Constants.denominator;
+            double backLeftPower = (rotY - rotX + rx) / Constants.denominator;
+            double frontRightPower = (rotY - rotX - rx) / Constants.denominator;
+            double backRightPower = (rotY + rotX - rx) / Constants.denominator;
 
             frontLeft.setPower(frontLeftPower);
             backLeft.setPower(backLeftPower);
@@ -193,25 +160,25 @@ public class TeleOpV2 extends LinearOpMode {
             // A, A
             /*
             if (gamepad1.b) {
-                denominator = 1;
+                Constants.denominator = 1;
             } else {
-                denominator = 0.5;
+                Constants.denominator = 0.5;
             }
 
              */
 
             // manual lift (test)
 
-            if ((gamepad1.a && !lastA)) {
-                direction = !direction;
-                if (!direction) {
-                    res = 0;
+            if ((gamepad1.a && !Constants.lastA)) {
+                Constants.direction = !Constants.direction;
+                if (!Constants.direction) {
+                    res = Constants.openClaw;
                 } else {
-                    res = 1;
+                    res = Constants.closedClaw;
                 }
                 claw.setPosition(res);
             }
-            lastA = gamepad1.a;
+            Constants.lastA = gamepad1.a;
 
             int factor = 10;
             double temp;
@@ -227,14 +194,14 @@ public class TeleOpV2 extends LinearOpMode {
                 }
 
                  */
-                arm.setPosition(armForwardPos);
+                arm.setPosition(Constants.armForwardPos);
             } else if (gamepad2.x) {
-                arm.setPosition(armSidewayPos);
+                arm.setPosition(Constants.armSidewayPos);
                 Thread.sleep(1000);
             } else if (gamepad2.y) {
                 /*
                 for (int i = 0; i <= factor; i++) {
-                    if (arm.getPosition() >= armBackwardPos) {
+                    if (arm.getPosition() >= Constants.armBackwardPos) {
                         break;
                     }
                     temp = arm.getPosition();
@@ -245,7 +212,7 @@ public class TeleOpV2 extends LinearOpMode {
                     }
                 }
                  */
-                arm.setPosition(armBackwardPos);
+                arm.setPosition(Constants.armBackwardPos);
             }
 
 
@@ -272,7 +239,7 @@ public class TeleOpV2 extends LinearOpMode {
                 // ticks = (ticks per inch)(# of inches)
                 //claw.setPosition(1);
 
-                int ticks = (int) (liftTicks * lowLift);
+                int ticks = (int) (Constants.liftTicks * Constants.lowLift);
 
 
                 lift1.setPower(speed);
@@ -284,13 +251,13 @@ public class TeleOpV2 extends LinearOpMode {
                 lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
                 //claw.setPosition(1);
-                denominator = 0.35;
+                Constants.denominator = 0.35;
 
             } else if (gamepad2.dpad_left) {
                 double speed = 0.8;
                 //claw.setPosition(1);
                 // ticks = (ticks per inch)(# of inches)
-                int ticks = (int) (liftTicks * mediumLift);
+                int ticks = (int) (Constants.liftTicks * Constants.mediumLift);
 
                 lift1.setPower(speed);
                 lift2.setPower(speed);
@@ -302,12 +269,12 @@ public class TeleOpV2 extends LinearOpMode {
                 lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 //claw.setPosition(1);
 
-                denominator = 0.35;
+                Constants.denominator = 0.35;
             } else if (gamepad2.dpad_up) {
                 double speed = 0.8;
                 //claw.setPosition(1);
                 // ticks = (ticks per inch)(# of inches)
-                int ticks = (int) (liftTicks * highLift);
+                int ticks = (int) (Constants.liftTicks * Constants.highLift);
 
 
                 lift1.setPower(speed);
@@ -319,7 +286,7 @@ public class TeleOpV2 extends LinearOpMode {
                 lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 //claw.setPosition(1);
 
-                denominator = 0.25;
+                Constants.denominator = 0.25;
                 // opening the claw
 
                 // resetting claw to closed
@@ -327,7 +294,7 @@ public class TeleOpV2 extends LinearOpMode {
             } else if (gamepad2.dpad_right) { // resetting lift
                 // ticks = (ticks per inch)(# of inches)
                 int ticks = 0;
-                arm.setPosition(armBackwardPos);
+                arm.setPosition(Constants.armBackwardPos);
                 Thread.sleep(1000);
                 lift1.setPower(0.25);
                 lift2.setPower(0.25);
@@ -337,7 +304,7 @@ public class TeleOpV2 extends LinearOpMode {
                 lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-                denominator = 0.5;
+                Constants.denominator = 0.5;
                 // opening the claw
 
             } else if (gamepad2.right_bumper) {
@@ -353,14 +320,14 @@ public class TeleOpV2 extends LinearOpMode {
                 lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-                denominator = 0.5;
+                Constants.denominator = 0.5;
             } else if (gamepad2.left_bumper) {
                 double speed = 0.8;
                 // ticks = (ticks per inch)(# of inches)
                 //claw.setPosition(1);
 
-                int ticks = (int) (liftTicks * sideConeLift);
-                sideConeLift -= 1.5;
+                int ticks = Constants.sideConeLift;
+                Constants.countCones--;
 
 
                 lift1.setPower(speed);
@@ -371,9 +338,9 @@ public class TeleOpV2 extends LinearOpMode {
                 lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 Thread.sleep(500);
-                arm.setPosition(armForwardPos);
+                arm.setPosition(Constants.armForwardPos);
                 //claw.setPosition(1);
-                denominator = 0.35;
+                Constants.denominator = 0.35;
             }
 
             if (time.seconds() >= 85) {

@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.rrTest;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
@@ -87,7 +87,9 @@ public class AsyncTrajectoryTest extends LinearOpMode {
         drive.followTrajectory(test2);
 
         drive.followTrajectory(test1);
-        drive.whileMotorsActive();
+        while (drive.isBusy()) {
+
+        }
         drive.liftConfig(3, false);
 
 

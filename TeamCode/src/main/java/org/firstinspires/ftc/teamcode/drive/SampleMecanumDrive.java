@@ -28,6 +28,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
+import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceBuilder;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceRunner;
@@ -76,18 +77,6 @@ public class SampleMecanumDrive extends MecanumDrive {
 
     private BNO055IMU imu;
     private VoltageSensor batteryVoltageSensor;
-
-    public static int countCones = 0;
-    public static double openClaw = 0.53;
-    public static double closedClaw = 1;
-
-    // lift height/speed values
-    double liftSpeed = 0.5;
-    double lowLift = 15;
-    double mediumLift = 23;
-    double highLift = 33;
-    double circumferenceLift = 2 * Math.PI;
-    int liftTicks = (int) (250 / circumferenceLift);
 
     public SampleMecanumDrive(HardwareMap hardwareMap) {
         super(kV, kA, kStatic, TRACK_WIDTH, TRACK_WIDTH, LATERAL_MULTIPLIER);
@@ -196,53 +185,47 @@ public class SampleMecanumDrive extends MecanumDrive {
         int ticks = 0;
         if (!ifCone) {
             if (height == 3) {
-                ticks = (int) (liftTicks * highLift);
+                ticks = (int) (Constants.liftTicks * Constants.highLift);
+                Constants.liftSpeed = 0.8;
 
             } else if (height == 2)  {
-                ticks = (int) (liftTicks * mediumLift);
+                ticks = (int) (Constants.liftTicks * Constants.mediumLift);
+                Constants.liftSpeed = 0.8;
             } else if (height == 1) {
-                ticks = (int) (liftTicks * lowLift);
+                ticks = (int) (Constants.liftTicks * Constants.lowLift);
+                Constants.liftSpeed = 0.8;
+            } else {
+                ticks = 0;
+                Constants.liftSpeed = 0.4;
+            }
+        } else {
+            if (Constants.distancePerCone > 0) {
+                ticks = (int) (Constants.liftTicks * (5 + (Constants.countCones * Constants.distancePerCone)));
             } else {
                 ticks = 0;
             }
-        } else {
-            ticks = (int) (liftTicks * (10 - (1.5 * countCones)));
         }
 
         lift1.setTargetPosition(ticks);
         lift2.setTargetPosition(ticks);
-        lift1.setPower(liftSpeed);
-        lift2.setPower(liftSpeed);
+        lift1.setPower(Constants.liftSpeed);
+        lift2.setPower(Constants.liftSpeed);
         lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
 
     }
 
-
-    public void armPresets(int degrees) {
-        if (degrees > 180) {
-            degrees = 180;
-        }
-        arm.setPosition(degrees/180.0);
-
-
-    }
-
    public void clawOpen() {
-        claw.setPosition(openClaw);
+        claw.setPosition(Constants.openClaw);
     }
     public void clawClose() {
-        claw.setPosition(closedClaw);
+        claw.setPosition(Constants.closedClaw);
     }
 
-
-    public void whileMotorsActive() {
-        while (frontLeft.isBusy() || frontRight.isBusy() || backLeft.isBusy() || backRight.isBusy()) {
-        }
+    public void setArm(double position) {
+        arm.setPosition(position);
     }
-
-
 
     public void turnAsync(double angle) {
         trajectorySequenceRunner.followTrajectorySequenceAsync(
