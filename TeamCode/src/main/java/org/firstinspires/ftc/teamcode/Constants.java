@@ -4,26 +4,26 @@ import org.firstinspires.ftc.teamcode.comp.AprilTagDetectionPipeline;
 import org.openftc.apriltag.AprilTagDetection;
 
 public class Constants {
-    public static double wheelDiameter = 3.77953;
-    public static double circumference = wheelDiameter * Math.PI * 0.513;
-    public static double circumferenceLift = 2 * Math.PI;
+    public static double circumferenceLift = 2 * Math.PI; // lift pulley circumference
     public static int liftTicks = (int) (250 / circumferenceLift);  // variable value because of inconsistencies
 
-    public static int cycles = 2;
-    public static double turnDenom = 0.8;
-    public static double denominator = 0.8;
+    public static int cycles = 2; // number of auton cycles
+    public static double turnDenom = 0.8; // turn factor in tele
+    public static double denominator = 0.8; // drive factor in tele
 
+    // claw positions
     public static double openClaw = 0;
     public static double closedClaw = 1;
 
+    // arm positions
     public static double armForwardPos = 0.2597;
     public static double armSidewayPos = 0.3148;
     public static double armBackwardPos = 0.369;
 
     // Side cones
-    public static int countCones = 5;
-    public static double distancePerCone = 1.5;
-    public static int sideConeLift = (int) (Constants.liftTicks * (3 + Constants.countCones * Constants.distancePerCone));
+    public static int countCones = 5; // number of side cones (changes value)
+    public static double distancePerCone = 0.7; // distance in lift inches per side cone
+    public static int sideConeLift = (int) (Constants.liftTicks * (3 + countCones * distancePerCone)); // calculation for lift height
 
 
     // Claw booleans
@@ -58,6 +58,6 @@ public class Constants {
     public static int depositY = -12;
     public static int loadX = 54;
     public static int loadY = -12;
-    public static int parkX = 34 + 24 * location;
+    public static int parkX = 34 + 24 *  (location - 1);
     public static int parkY = depositY;
 }
