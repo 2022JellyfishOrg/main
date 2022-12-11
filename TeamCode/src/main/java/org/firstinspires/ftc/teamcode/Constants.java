@@ -25,7 +25,7 @@ public class Constants {
     public static final double offset = 0;
     public static final double armForwardPos = 0.25 + offset;
     public static final double armSidewayPos = 0.3148 + offset;
-    public static final double armBackwardPos = 0.36 + offset;
+    public static final double armBackwardPos = 0.365 + offset;
     public static final double armAutonMedPos = armForwardPos + (armSidewayPos - armForwardPos)/2;
 
     // Side cones
@@ -44,9 +44,9 @@ public class Constants {
 
 
     // Lift heights
-    public static final double lowLift = 4;
-    public static final double mediumLift = 7;
-    public static final double highLift = 12;
+    public static final int lowLift = 344;
+    public static final int mediumLift = 557;
+    public static final int highLift = 786;
     public static double liftSpeed = 0.8;
 
     // Apriltag stuff

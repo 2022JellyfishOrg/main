@@ -1,11 +1,10 @@
-package org.firstinspires.ftc.teamcode.comp;
+package org.firstinspires.ftc.teamcode.hackerstuff;
 
-import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
@@ -19,18 +18,20 @@ import org.openftc.easyopencv.OpenCvWebcam;
 import java.util.ArrayList;
 
 @Autonomous
-public class rrRight1_0 extends LinearOpMode {
+public class rrRight1_0NoMove extends LinearOpMode {
 
     // Declaring trajectories
     Trajectory toAlign;
     Trajectory toPark;
     AprilTagDetectionPipeline aprilTagDetectionPipeline;
+    double tag = Constants.tagsize;
 
 
 
     public void runOpMode() throws InterruptedException {
         telemetry.addLine("Initializing.");
 
+        int loc = 0;
         // WEBCAM STUFF
         OpenCvWebcam webcam;
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
@@ -59,54 +60,33 @@ public class rrRight1_0 extends LinearOpMode {
 
             if(currentDetections.size() != 0)
             {
-                boolean tagFound = false;
-
                 for(AprilTagDetection tag : currentDetections)
                 {
                     if(tag.id == Constants.LEFT || tag.id == Constants.MIDDLE || tag.id == Constants.RIGHT)
                     {
                         Constants.tagOfInterest = tag;
-                        tagFound = true;
                         if(tag.id==Constants.LEFT){
-                            Constants.location = 0;
+                            loc = 0;
 
                         }else if(tag.id==Constants.MIDDLE){
-                            Constants.location = 1;
+                            loc = 1;
 
                         }else if(tag.id==Constants.RIGHT){
-                            Constants.location = 2;
+                            loc = 2;
                         }
-                        break;
                     }
+                    telemetry.update();
                 }
+                telemetry.update();
 
             }
-
-
+            telemetry.addData("zone", loc);
             telemetry.update();
-            sleep(20);
+            sleep(1000);
+
         }
-
-        // start position of robot (NEEDS TO BE ACCURATE TO ABOUT AN INCH OR LESS)
-        Pose2d startPose = new Pose2d(Constants.startPoseX, Constants.startPoseY, 0);
-
-        // setting robot "drive" position to the start position above
-        drive.setPoseEstimate(startPose);
-
-        toAlign = drive.trajectoryBuilder(startPose)
-                .strafeTo(new Vector2d(Constants.startPoseX, Constants.parkY))
-                .build();
-        toPark = drive.trajectoryBuilder(toAlign.end())
-                .lineTo(new Vector2d(Constants.parkX, Constants.parkY))
-                .build();
-
         waitForStart();
 
-        telemetry.addData("zone", Constants.location);
-        telemetry.update();
-
-        drive.followTrajectory(toAlign);
-        //drive.followTrajectory(toPark);
 
     }
 
