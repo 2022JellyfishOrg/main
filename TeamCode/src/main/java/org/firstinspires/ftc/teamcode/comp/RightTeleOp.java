@@ -4,14 +4,13 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Constants;
 
 @TeleOp
-public class LeftTeleop extends LinearOpMode {
+public class RightTeleOp extends LinearOpMode {
     ElapsedTime endgameTimer = new ElapsedTime();
     ElapsedTime liftTimer = new ElapsedTime();
     ElapsedTime isToggled = new ElapsedTime();
@@ -21,7 +20,6 @@ public class LeftTeleop extends LinearOpMode {
     int ticks = 0;
     double clawToggle, armPos;
     boolean isBackward;
-    boolean isMacro = true;
 
 
     Servo claw, arm;
@@ -78,19 +76,7 @@ public class LeftTeleop extends LinearOpMode {
         liftTimer.reset();
 
         while (opModeIsActive()) {
-            if (liftTimer.milliseconds() > 500 && liftActive) {
-                if (isMacro) {
-                    arm.setPosition(armPos);
-                } else {
-                    lift1.setTargetPosition(ticks);
-                    lift2.setTargetPosition(ticks);
-                    lift1.setPower(0.6);
-                    lift2.setPower(0.6);
-                    lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                }
-                liftActive = false;
-            }
+
 
             // Drivetrain movement
 
@@ -173,39 +159,25 @@ public class LeftTeleop extends LinearOpMode {
 
             // lift macros
             if (gamepad2.dpad_down) {
-                lift1.setTargetPosition(Constants.lowLift);
-                lift2.setTargetPosition(Constants.lowLift);
-                lift1.setPower(Constants.upSpeed);
-                lift2.setPower(Constants.upSpeed);
-                lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                liftTimer.reset();
+                ticks = Constants.lowLift;
                 liftActive = true;
             } else if (gamepad2.dpad_left) {
-                lift1.setTargetPosition(Constants.mediumLift);
-                lift2.setTargetPosition(Constants.mediumLift);
-                lift1.setPower(Constants.upSpeed);
-                lift2.setPower(Constants.upSpeed);
-                lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                liftTimer.reset();
+                ticks = Constants.mediumLift;
+                arm.setPosition(armPos);
                 liftActive = true;
-                isMacro = true;
             } else if (gamepad2.dpad_up) {
-                lift1.setTargetPosition(Constants.highLift);
-                lift2.setTargetPosition(Constants.highLift);
-                lift1.setPower(Constants.upSpeed);
-                lift2.setPower(Constants.upSpeed);
-                lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                liftTimer.reset();
+                ticks = Constants.highLift;
+                arm.setPosition(armPos);
                 liftActive = true;
-                isMacro = true;
             } else if (gamepad2.dpad_right) {
                 liftTimer.reset();
                 ticks = 0;
                 arm.setPosition(Constants.armBackwardPos);
                 liftActive = true;
-                isMacro = false;
             }
-
 
             // Changing macros to change between 180-90
             if (gamepad1.left_bumper) {

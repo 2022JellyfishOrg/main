@@ -48,6 +48,8 @@ public class Constants {
     public static final int mediumLift = 557;
     public static final int highLift = 786;
     public static double liftSpeed = 0.8;
+    public static double upSpeed = 0.9;
+    public static double downSpeed = 0.5;
 
     // Apriltag stuff
     public static AprilTagDetection tagOfInterest;
