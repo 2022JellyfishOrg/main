@@ -1,63 +1,93 @@
 package org.firstinspires.ftc.teamcode;
 
-import org.firstinspires.ftc.teamcode.comp.AprilTagDetectionPipeline;
 import org.openftc.apriltag.AprilTagDetection;
 
 public class Constants {
-    public static double circumferenceLift = 2 * Math.PI; // lift pulley circumference
-    public static int liftTicks = (int) (250 / circumferenceLift);  // variable value because of inconsistencies
 
-    public static int cycles = 2; // number of auton cycles
+    // public means it can be accessed by the other classes
+    // static means you can call the variables from the class (without reference object)
+    // final means the value is constant, can't be changed
+    // after that comes the object type
+    // then the name of the object, then the value after the equal sign
+
+    public static final double circumferenceLift = 2 * Math.PI; // lift pulley circumference
+    public static final int liftTicks = (int) (250 / circumferenceLift);  // variable value because of inconsistencies
+
+    public static final int cycles = 4; // number of auton cycles
     public static double turnDenom = 0.8; // turn factor in tele
     public static double denominator = 0.8; // drive factor in tele
 
     // claw positions
-    public static double openClaw = 0;
-    public static double closedClaw = 1;
+    public static final double openClaw = 0;
+    public static final double closedClaw = 1;
 
     // arm positions
-    public static double armForwardPos = 0.2597;
-    public static double armSidewayPos = 0.3148;
-    public static double armBackwardPos = 0.369;
+    public static final double offset = 0;
+    public static final double armForwardPos = 0.25 + offset;
+    public static final double armSidewayPos = 0.3148 + offset;
+    public static final double armBackwardPos = 0.36 + offset;
+    public static final double armAutonMedPos = armForwardPos + (armSidewayPos - armForwardPos)/2;
 
     // Side cones
     public static int countCones = 5; // number of side cones (changes value)
-    public static double distancePerCone = 0.7; // distance in lift inches per side cone
-    public static int sideConeLift = (int) (Constants.liftTicks * (3 + countCones * distancePerCone)); // calculation for lift height
+    public static final double distancePerCone = 0.35; // distance in lift inches per side cone
+    public static int sideConeLift = (int) (liftTicks * (1.5 + countCones * distancePerCone)); // calculation for lift height
 
 
     // Claw booleans
     public static boolean lastA = false;
     public static boolean direction = true;
 
+    // ninja mode booleans
+    public static boolean lastBumper = false;
+    public static boolean directionDenominator = true;
+
+
     // Lift heights
-    public static double lowLift = 7;
-    public static double mediumLift = 13;
-    public static double highLift = 19;
+    public static final double lowLift = 4;
+    public static final double mediumLift = 7;
+    public static final double highLift = 12;
     public static double liftSpeed = 0.8;
 
     // Apriltag stuff
-    public static AprilTagDetectionPipeline aprilTagDetectionPipeline;
-    public static AprilTagDetection tagOfInterest = null;
-    public static double fx = 578.272;
-    public static double fy = 578.272;
-    public static double cx = 402.145;
-    public static double cy = 221.506;
-    public static double tagsize = 0.166;
+    public static AprilTagDetection tagOfInterest;
+    public static final double fx = 578.272;
+    public static final double fy = 578.272;
+    public static final double cx = 402.145;
+    public static final double cy = 221.506;
+    public static final double tagsize = 0.166;
 
     // Vision choice
-    public static int LEFT = 1;
-    public static int MIDDLE = 2;
-    public static int RIGHT = 3;
+    public static final int LEFT = 1;
+    public static final int MIDDLE = 2;
+    public static final int RIGHT = 3;
     public static int location = 0;
 
     // Roadrunner coordinates
-    public static int startPoseX = 34;
-    public static int startPoseY = -61;
-    public static int depositX = 24;
-    public static int depositY = -12;
-    public static int loadX = 54;
-    public static int loadY = -12;
-    public static int parkX = 34 + 24 *  (location - 1);
-    public static int parkY = depositY;
+    /*
+    public static double startPoseX = 34;
+    public static double startPoseY = -61;
+    public static double depositX = 32;
+    public static double depositY = -11;
+    public static double startAngle = Math.toRadians(0);
+    public static double depositAngle = Math.toRadians(0);
+    public static double loadAngle = Math.toRadians(0);
+    public static double parkAngle = Math.toRadians(0);
+    public static double loadX = 57.5;
+    public static double loadY = -10;
+    public static double parkX = 34 + 24 * (location - 1);
+    public static double parkY = depositY;
+    */
+    public static double startPoseX = 34;
+    public static double startPoseY = -61;
+    public static double depositX = 34;
+    public static double depositY = -13;
+    public static double startAngle = Math.toRadians(0);
+    public static double depositAngle = Math.toRadians(0);
+    public static double loadAngle = Math.toRadians(0);
+    public static double parkAngle = Math.toRadians(0);
+    public static double loadX = 56.5;
+    public static double loadY = -12;
+    public static double parkX = 34 + 24 * (location - 1);
+    public static double parkY = depositY;
 }

@@ -55,10 +55,13 @@ import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kV;
  */
 @Config
 public class SampleMecanumDrive extends MecanumDrive {
-    public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(0.35, 0, 0);
-    public static PIDCoefficients HEADING_PID = new PIDCoefficients(6, 0, 0);
 
-    public static double LATERAL_MULTIPLIER = 1;
+    public static int ticks = 0;
+
+    public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(2.5, 0, 0);
+    public static PIDCoefficients HEADING_PID = new PIDCoefficients(7, 0, 0);
+
+    public static double LATERAL_MULTIPLIER = 60.0/58.0;
 
     public static double VX_WEIGHT = 1;
     public static double VY_WEIGHT = 1;
@@ -152,10 +155,12 @@ public class SampleMecanumDrive extends MecanumDrive {
         // TODO: reverse any motors using DcMotor.setDirection()
         frontLeft.setDirection(DcMotor.Direction.REVERSE);
         backLeft.setDirection(DcMotor.Direction.REVERSE);
+        lift1.setDirection(DcMotor.Direction.REVERSE);
+        lift2.setDirection(DcMotor.Direction.REVERSE);
+
 
         // TODO: if desired, use setLocalizer() to change the localization method
         setLocalizer(new TwoWheelTrackingLocalizer(hardwareMap, this));
-        // setLocalizer(new StandardTrackingWheelLocalizer(hardwareMap));
 
         trajectorySequenceRunner = new TrajectorySequenceRunner(follower, HEADING_PID);
     }
@@ -180,29 +185,37 @@ public class SampleMecanumDrive extends MecanumDrive {
         );
     }
 
+    public void resetLifts() {
+        lift1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        lift2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    }
     public void liftConfig(int height, boolean ifCone) {
 
-        int ticks = 0;
         if (!ifCone) {
             if (height == 3) {
-                ticks = (int) (Constants.liftTicks * Constants.highLift);
-                Constants.liftSpeed = 0.8;
+                ticks = 786;
+                Constants.liftSpeed = 1;
 
             } else if (height == 2)  {
-                ticks = (int) (Constants.liftTicks * Constants.mediumLift);
-                Constants.liftSpeed = 0.8;
+                ticks = 530;
+                Constants.liftSpeed = 1;
             } else if (height == 1) {
-                ticks = (int) (Constants.liftTicks * Constants.lowLift);
-                Constants.liftSpeed = 0.8;
+                ticks = 344;
+                Constants.liftSpeed = 1;
+            } else if (height == 4) {
+                ticks = 530;
+                Constants.liftSpeed = 1;
             } else {
                 ticks = 0;
-                Constants.liftSpeed = 0.4;
+                Constants.liftSpeed = 0.5;
             }
         } else {
             if (Constants.distancePerCone > 0) {
-                ticks = (int) (Constants.liftTicks * (5 + (Constants.countCones * Constants.distancePerCone)));
+                ticks = height;
+                Constants.liftSpeed = 0.5;
             } else {
                 ticks = 0;
+                Constants.liftSpeed = 0.5;
             }
         }
 

@@ -1,17 +1,16 @@
-package org.firstinspires.ftc.teamcode.rrTest;
+package org.firstinspires.ftc.teamcode.comp;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Constants;
 
-@Autonomous
-public class LiftTestRR extends LinearOpMode {
+@TeleOp
+public class TestSideCones extends LinearOpMode {
     ElapsedTime timer = new ElapsedTime();
     ElapsedTime killSwitch = new ElapsedTime();
     DcMotor backLeft, backRight, frontLeft, frontRight, lift1, lift2;
@@ -71,8 +70,36 @@ public class LiftTestRR extends LinearOpMode {
         timer.reset();
 
         while (opModeIsActive()) {
-            lift1.setPower(1);
-            lift2.setPower(1);
+            // Retrieve your pose
+            if (lift1.getCurrentPosition() == 0) {
+                lift1.setPower(0);
+                lift2.setPower(0);
+            }
+            if (gamepad2.left_stick_y < 0 && lift1.getCurrentPosition() <= Constants.liftTicks * Constants.highLift + 50) {
+                if (lift1.getPower() == 0) {
+                    lift1.setPower(1);
+                    lift2.setPower(1);
+                }
+                if (lift1.getCurrentPosition() <= Constants.liftTicks * Constants.highLift + 100) {
+                    lift1.setTargetPosition(lift1.getCurrentPosition() + 15);
+                    lift2.setTargetPosition(lift2.getCurrentPosition() + 15);
+                    lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                }
+            } else if (gamepad2.left_stick_y > 0 && lift1.getCurrentPosition() >= -50) {
+                if (lift1.getPower() == 0) {
+                    lift1.setPower(1);
+                    lift2.setPower(1);
+                }
+                if (lift1.getCurrentPosition() >= 0) {
+                    lift1.setTargetPosition(lift1.getCurrentPosition() - 15);
+                    lift2.setTargetPosition(lift1.getCurrentPosition() - 15);
+                    lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                }
+            }
+            telemetry.addData("liftHeight", lift1.getCurrentPosition());
+            telemetry.update();
         }
     }
 }
