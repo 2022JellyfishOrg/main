@@ -4,6 +4,9 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.Constants;
@@ -27,69 +30,47 @@ public class RightAuton extends LinearOpMode {
     Trajectory toLoad;
     Trajectory toDeposit;
     Trajectory toPark;
+    Trajectory toDepositOffset1;
+    Trajectory toDepositOffset2;
+    ElapsedTime timer = new ElapsedTime();
+    OpenCvCamera webcam;
+    int signalZonePos = 0;
+    int offset = 0;
+
 
     // Vision pipeline
     AprilTagDetectionPipeline aprilTagDetectionPipeline;
-    int [] heights = {103, 78, 44, 20, 0};
+    int [] heights = {155, 125, 85, 28, 0};
 
 
+    @Override
     public void runOpMode() throws InterruptedException {
-
-        // declaring drive (object from which we create our path, its basically the robot)
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+        int cameraMonitorViewId = hardwareMap.appContext.getResources()
+                .getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
 
-        // WEBCAM STUFF (stores position in value called "location")
-        OpenCvWebcam webcam;
-        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-        webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
-        aprilTagDetectionPipeline = new AprilTagDetectionPipeline(telemetry);
-
-        webcam.setPipeline(aprilTagDetectionPipeline);
-        webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
-        {
+        webcam = OpenCvCameraFactory.getInstance()
+                .createWebcam(hardwareMap.get(WebcamName.class,"webby"), cameraMonitorViewId);
+        Detector detector = new Detector(telemetry);
+        webcam.setPipeline(detector);
+        webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
             @Override
-            public void onOpened()
-            {
-                webcam.startStreaming(800,448, OpenCvCameraRotation.UPRIGHT);
+            public void onOpened() {
+                webcam.startStreaming(320, 240, OpenCvCameraRotation.UPRIGHT);
             }
 
             @Override
-            public void onError(int errorCode)
-            {
+            public void onError(int errorCode) {
 
             }
         });
-        while (!isStarted() && !isStopRequested())
-        {
-            ArrayList<AprilTagDetection> currentDetections = aprilTagDetectionPipeline.getLatestDetections();
 
-            if(currentDetections.size() != 0)
-            {
-                boolean tagFound = false;
 
-                for(AprilTagDetection tag : currentDetections)
-                {
-                    if(tag.id == Constants.LEFT || tag.id == Constants.MIDDLE || tag.id == Constants.RIGHT)
-                    {
-                        Constants.tagOfInterest = tag;
-                        tagFound = true;
-                         if(tag.id== Constants.LEFT){
-                            Constants.location = 0;
 
-                        }else if(tag.id== Constants.MIDDLE){
-                            Constants.location = 1;
-
-                        }else if(tag.id== Constants.RIGHT){
-                            Constants.location = 2;
-                        }
-                        break;
-                    }
-                }
-
-            }
-            telemetry.update();
-            sleep(20);
-        }
+        waitForStart();
+        signalZonePos = detector.getPosition();
+        telemetry.addData("zone", signalZonePos);
+        telemetry.update();
 
         // Setting up trajectories and start position BEFORE starting
 
@@ -98,24 +79,31 @@ public class RightAuton extends LinearOpMode {
 
         // setting robot "drive" position to the start position above
         drive.setPoseEstimate(startPose);
+        int pos = (34 + (24 * (signalZonePos - 2)));
 
         toPreload = drive.trajectoryBuilder(startPose)
-                .lineToLinearHeading(new Pose2d(Constants.depositX, Constants.depositY, Constants.depositAngle))
+                .lineToLinearHeading(new Pose2d(Constants.depositX+1, Constants.depositY+2, Constants.depositAngle))
                 .addTemporalMarker(0.25, () -> drive.setArm(Constants.armAutonMedPos))
                 .build();
         toLoad = drive.trajectoryBuilder(toPreload.end())
-                .lineToLinearHeading(new Pose2d(Constants.loadX, Constants.loadY, Constants.loadAngle))
+                .lineToLinearHeading(new Pose2d(Constants.loadX + 1.0/2.0, Constants.loadY-1, Constants.loadAngle))
                 .build();
         toDeposit = drive.trajectoryBuilder(toLoad.end())
-                .lineToLinearHeading(new Pose2d(Constants.depositX, Constants.depositY, Constants.depositAngle))
+                .lineToLinearHeading(new Pose2d(Constants.depositX + 1.5, Constants.depositY, Constants.depositAngle))
+                .addTemporalMarker(0.25, () -> drive.setArm(Constants.armAutonMedPos))
+                .build();
+        toDepositOffset1 = drive.trajectoryBuilder(toLoad.end())
+                .lineToLinearHeading(new Pose2d(Constants.depositX + 1.5, Constants.depositY + offset, Constants.depositAngle))
+                .addTemporalMarker(0.25, () -> drive.setArm(Constants.armAutonMedPos))
+                .build();
+        toDepositOffset2 = drive.trajectoryBuilder(toLoad.end())
+                .lineToLinearHeading(new Pose2d(Constants.depositX + 1.5, Constants.depositY + 2 * offset, Constants.depositAngle))
                 .addTemporalMarker(0.25, () -> drive.setArm(Constants.armAutonMedPos))
                 .build();
         toPark = drive.trajectoryBuilder(toDeposit.end())
-                .lineToLinearHeading(new Pose2d(Constants.parkX, Constants.parkY, Constants.parkAngle))
+                .lineToLinearHeading(new Pose2d(pos, Constants.parkY, Constants.parkAngle))
 
                 .build();
-
-        waitForStart();
 
         // move lift to high (0 is reset, 1 is low, 2 is medium, 3 is high))
         // ifCone represents if lift is picking up auton cone or depositing (true: auton cone, false: depositing)
@@ -138,14 +126,18 @@ public class RightAuton extends LinearOpMode {
         for (int i = 0; i < Constants.cycles; i++) {
 
             // open claw
-            Thread.sleep(250);
+            Thread.sleep(1000);
             drive.clawOpen();
             Thread.sleep(250);
 
             // reset lift to auton cone height
+            timer.reset();
             drive.setArm(Constants.armBackwardPos);
+            drive.followTrajectory(toLoad);
 
-            Thread.sleep(250);
+            while (timer.seconds() < 2) {
+
+            }
 
             drive.liftConfig(heights[i], true);
             Constants.countCones--;
@@ -164,16 +156,22 @@ public class RightAuton extends LinearOpMode {
             drive.liftConfig(2, false);
 
             // Go back to deposit
-            drive.followTrajectory(toDeposit);
+            if (Constants.cycles == 2) {
+                drive.followTrajectory(toDepositOffset1);
+                offset += 0.5;
+            }
         }
 
         Thread.sleep(500);
         drive.clawOpen();
         Thread.sleep(500);
 
+        drive.setArm(Constants.armBackwardPos);
+        Thread.sleep(1000);
 
         //drive.followTrajectory(toPark);
         drive.liftConfig(0, false);
+        drive.followTrajectory(toPark);
 
 
         drive.clawClose();

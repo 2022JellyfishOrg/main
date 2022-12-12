@@ -13,9 +13,9 @@ public class Constants {
     public static final double circumferenceLift = 2 * Math.PI; // lift pulley circumference
     public static final int liftTicks = (int) (250 / circumferenceLift);  // variable value because of inconsistencies
 
-    public static final int cycles = 4; // number of auton cycles
+    public static final int cycles = 3; // number of auton cycles
     public static double turnDenom = 0.8; // turn factor in tele
-    public static double denominator = 0.8; // drive factor in tele
+    public static double denominator = 0.5; // drive factor in tele
 
     // claw positions
     public static final double openClaw = 0;
@@ -23,8 +23,8 @@ public class Constants {
 
     // arm positions
     public static final double offset = 0;
-    public static final double armForwardPos = 0.25 + offset;
-    public static final double armSidewayPos = 0.3148 + offset;
+    public static final double armForwardPos = 0.255 + offset;
+    public static final double armSidewayPos = 0.3125 + offset;
     public static final double armBackwardPos = 0.365 + offset;
     public static final double armAutonMedPos = armForwardPos + (armSidewayPos - armForwardPos)/2;
 
@@ -44,9 +44,9 @@ public class Constants {
 
 
     // Lift heights
-    public static final int lowLift = 344;
-    public static final int mediumLift = 557;
-    public static final int highLift = 786;
+    public static final int lowLift = 530;
+    public static final int mediumLift = 780;
+    public static final int highLift = 1140;
     public static double liftSpeed = 0.8;
     public static double upSpeed = 0.9;
     public static double downSpeed = 0.5;
@@ -63,7 +63,6 @@ public class Constants {
     public static final int LEFT = 1;
     public static final int MIDDLE = 2;
     public static final int RIGHT = 3;
-    public static int location = 0;
 
     // Roadrunner coordinates
     /*
@@ -82,14 +81,14 @@ public class Constants {
     */
     public static double startPoseX = 34;
     public static double startPoseY = -61;
-    public static double depositX = 34;
-    public static double depositY = -13;
+    public static double depositX = 33;
+    public static double depositY = -15;
     public static double startAngle = Math.toRadians(0);
     public static double depositAngle = Math.toRadians(0);
     public static double loadAngle = Math.toRadians(0);
     public static double parkAngle = Math.toRadians(0);
-    public static double loadX = 56.5;
+    public static double loadX = 57;
     public static double loadY = -12;
-    public static double parkX = 34 + 24 * (location - 1);
-    public static double parkY = depositY;
+    public static double parkX = 33;
+    public static double parkY = -14;
 }

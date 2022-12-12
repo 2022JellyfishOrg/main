@@ -193,17 +193,17 @@ public class SampleMecanumDrive extends MecanumDrive {
 
         if (!ifCone) {
             if (height == 3) {
-                ticks = 786;
+                ticks = Constants.highLift;
                 Constants.liftSpeed = 1;
 
             } else if (height == 2)  {
-                ticks = 530;
+                ticks = Constants.mediumLift;
                 Constants.liftSpeed = 1;
             } else if (height == 1) {
-                ticks = 344;
+                ticks = Constants.lowLift;
                 Constants.liftSpeed = 1;
             } else if (height == 4) {
-                ticks = 530;
+                ticks = Constants.mediumLift;
                 Constants.liftSpeed = 1;
             } else {
                 ticks = 0;

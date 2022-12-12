@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.hackerstuff;
+package org.firstinspires.ftc.teamcode.comp;
 
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;

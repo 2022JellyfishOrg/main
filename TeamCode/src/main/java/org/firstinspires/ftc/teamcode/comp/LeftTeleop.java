@@ -20,12 +20,14 @@ public class LeftTeleop extends LinearOpMode {
     boolean liftActive = false;
     int ticks = 0;
     double clawToggle, armPos;
-    boolean isBackward;
+    boolean isBackward = true;
     boolean isMacro = true;
 
 
     Servo claw, arm;
     BNO055IMU imu;
+    int turnfac;
+
 
 
     @Override
@@ -78,6 +80,11 @@ public class LeftTeleop extends LinearOpMode {
         liftTimer.reset();
 
         while (opModeIsActive()) {
+            if (lift1.getCurrentPosition() > 900) {
+                turnfac = 7;
+            } else {
+                turnfac = 2;
+            }
             if (liftTimer.milliseconds() > 500 && liftActive) {
                 if (isMacro) {
                     arm.setPosition(armPos);
@@ -96,7 +103,7 @@ public class LeftTeleop extends LinearOpMode {
 
             double y = gamepad1.left_stick_y * Constants.denominator;// Remember, this is reversed!
             double x = -gamepad1.left_stick_x * 1.1 * Constants.denominator; // Counteract imperfect strafing
-            double rx = gamepad1.right_stick_x * Constants.denominator; // turning
+            double rx = gamepad1.right_stick_x * (Constants.denominator / turnfac); // turning
 
             double frontLeftPower = (y + x + rx);
             double backLeftPower = (y - x + rx);
@@ -180,6 +187,7 @@ public class LeftTeleop extends LinearOpMode {
                 lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 liftActive = true;
+                Constants.denominator = 0.2;
             } else if (gamepad2.dpad_left) {
                 lift1.setTargetPosition(Constants.mediumLift);
                 lift2.setTargetPosition(Constants.mediumLift);
@@ -189,6 +197,7 @@ public class LeftTeleop extends LinearOpMode {
                 lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 liftActive = true;
                 isMacro = true;
+                Constants.denominator = 0.2;
             } else if (gamepad2.dpad_up) {
                 lift1.setTargetPosition(Constants.highLift);
                 lift2.setTargetPosition(Constants.highLift);
@@ -198,12 +207,14 @@ public class LeftTeleop extends LinearOpMode {
                 lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 liftActive = true;
                 isMacro = true;
+                Constants.denominator = 0.2;
             } else if (gamepad2.dpad_right) {
                 liftTimer.reset();
                 ticks = 0;
                 arm.setPosition(Constants.armBackwardPos);
                 liftActive = true;
                 isMacro = false;
+                Constants.denominator = 0.6;
             }
 
 
@@ -219,6 +230,7 @@ public class LeftTeleop extends LinearOpMode {
                         armPos = Constants.armForwardPos;
                         pos = 180;
                     }
+                    isBackward = !isBackward;
                     gamepad1.rumble(500);
                     telemetry.addData("NEW POSITION: ", pos);
                 }
