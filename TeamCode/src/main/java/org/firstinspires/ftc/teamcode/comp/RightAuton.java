@@ -28,10 +28,10 @@ public class RightAuton extends LinearOpMode {
      */
     Trajectory toPreload;
     Trajectory toLoad;
-    Trajectory toDeposit;
     Trajectory toPark;
-    Trajectory toDepositOffset1;
-    Trajectory toDepositOffset2;
+    Trajectory toDeposit1;
+    Trajectory toDeposit2;
+    Trajectory toDeposit3;
     ElapsedTime timer = new ElapsedTime();
     OpenCvCamera webcam;
     int signalZonePos = 0;
@@ -79,30 +79,29 @@ public class RightAuton extends LinearOpMode {
 
         // setting robot "drive" position to the start position above
         drive.setPoseEstimate(startPose);
-        int pos = (34 + (24 * (signalZonePos - 2)));
+        int pos = (36 + (24 * (signalZonePos - 2)));
 
         toPreload = drive.trajectoryBuilder(startPose)
-                .lineToLinearHeading(new Pose2d(Constants.depositX+1, Constants.depositY+2, Constants.depositAngle))
+                .lineToLinearHeading(new Pose2d(Constants.depositX+1, Constants.depositY + 1, Constants.depositAngle))
                 .addTemporalMarker(0.25, () -> drive.setArm(Constants.armAutonMedPos))
                 .build();
         toLoad = drive.trajectoryBuilder(toPreload.end())
-                .lineToLinearHeading(new Pose2d(Constants.loadX + 1.0/2.0, Constants.loadY-1, Constants.loadAngle))
+                .lineToLinearHeading(new Pose2d(Constants.loadX, Constants.loadY-0.5, Constants.loadAngle))
                 .build();
-        toDeposit = drive.trajectoryBuilder(toLoad.end())
-                .lineToLinearHeading(new Pose2d(Constants.depositX + 1.5, Constants.depositY, Constants.depositAngle))
+        toDeposit1 = drive.trajectoryBuilder(toLoad.end())
+                .lineToLinearHeading(new Pose2d(Constants.depositX + 2.5, Constants.depositY, Constants.depositAngle))
                 .addTemporalMarker(0.25, () -> drive.setArm(Constants.armAutonMedPos))
                 .build();
-        toDepositOffset1 = drive.trajectoryBuilder(toLoad.end())
-                .lineToLinearHeading(new Pose2d(Constants.depositX + 1.5, Constants.depositY + offset, Constants.depositAngle))
+        toDeposit2 = drive.trajectoryBuilder(toLoad.end())
+                .lineToLinearHeading(new Pose2d(Constants.depositX + 2.5, Constants.depositY + 0.3, Constants.depositAngle))
                 .addTemporalMarker(0.25, () -> drive.setArm(Constants.armAutonMedPos))
                 .build();
-        toDepositOffset2 = drive.trajectoryBuilder(toLoad.end())
-                .lineToLinearHeading(new Pose2d(Constants.depositX + 1.5, Constants.depositY + 2 * offset, Constants.depositAngle))
+        toDeposit3 = drive.trajectoryBuilder(toLoad.end())
+                .lineToLinearHeading(new Pose2d(Constants.depositX + 2.5, Constants.depositY + 0.7, Constants.depositAngle))
                 .addTemporalMarker(0.25, () -> drive.setArm(Constants.armAutonMedPos))
                 .build();
-        toPark = drive.trajectoryBuilder(toDeposit.end())
+        toPark = drive.trajectoryBuilder(toDeposit3.end())
                 .lineToLinearHeading(new Pose2d(pos, Constants.parkY, Constants.parkAngle))
-
                 .build();
 
         // move lift to high (0 is reset, 1 is low, 2 is medium, 3 is high))
@@ -135,31 +134,36 @@ public class RightAuton extends LinearOpMode {
             drive.setArm(Constants.armBackwardPos);
             drive.followTrajectory(toLoad);
 
-            while (timer.seconds() < 2) {
-
-            }
-
             drive.liftConfig(heights[i], true);
+            Thread.sleep(2000);
             Constants.countCones--;
             telemetry.addData("countCones2", Constants.countCones);
             telemetry.addData("ticks", SampleMecanumDrive.ticks);
             telemetry.update();
 
-            // drive to auton cones
-            drive.followTrajectory(toLoad);
-
             // grab cone
             drive.clawClose();
-            Thread.sleep(250);
+            Thread.sleep(500);
 
-            // moving cone up BEFORE following path
             drive.liftConfig(2, false);
 
-            // Go back to deposit
-            if (Constants.cycles == 2) {
-                drive.followTrajectory(toDepositOffset1);
-                offset += 0.5;
+            // drive to auton cones
+            if (i == 0) {
+                drive.followTrajectory(toDeposit1);
+            } else if (i == 1) {
+                drive.followTrajectory (toDeposit2);
+            } else if (i == 2) {
+                drive.followTrajectory(toDeposit3);
+            } else {
+                drive.followTrajectory(toDeposit3);
             }
+
+
+
+            // moving cone up BEFORE following path
+
+            // Go back to deposit
+
         }
 
         Thread.sleep(500);
@@ -173,11 +177,7 @@ public class RightAuton extends LinearOpMode {
         drive.liftConfig(0, false);
         drive.followTrajectory(toPark);
 
-
-        drive.clawClose();
     }
 
 
 }
-
-

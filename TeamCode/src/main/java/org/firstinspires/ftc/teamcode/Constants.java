@@ -45,7 +45,7 @@ public class Constants {
 
     // Lift heights
     public static final int lowLift = 530;
-    public static final int mediumLift = 780;
+    public static final int mediumLift = 765;
     public static final int highLift = 1140;
     public static double liftSpeed = 0.8;
     public static double upSpeed = 0.9;
@@ -82,7 +82,7 @@ public class Constants {
     public static double startPoseX = 34;
     public static double startPoseY = -61;
     public static double depositX = 33;
-    public static double depositY = -15;
+    public static double depositY = -14;
     public static double startAngle = Math.toRadians(0);
     public static double depositAngle = Math.toRadians(0);
     public static double loadAngle = Math.toRadians(0);
