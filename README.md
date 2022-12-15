@@ -1,2 +1,2 @@
-Comp -> potential files we use in comp 
+Navigate to files used in competition: Teamcode -> src/main -> teamcode -> comp
 
