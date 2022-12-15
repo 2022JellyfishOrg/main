@@ -93,7 +93,7 @@ public class NewTele extends LinearOpMode {
 
             // Drivetrain movement
 
-            double denomMult = gamepad1.right_trigger * 4;
+            double denomMult = gamepad1.right_trigger * 3;
             double y = gamepad1.left_stick_y * Constants.denominator * denomMult;// Remember, this is reversed!
             double x = -gamepad1.left_stick_x * 1.1 * Constants.denominator * denomMult; // Counteract imperfect strafing
             double rx = gamepad1.right_stick_x * Constants.denominator * denomMult; // turning
