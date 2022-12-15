@@ -8,19 +8,19 @@ import com.noahbres.meepmeep.roadrunner.DefaultBotBuilder;
 import com.noahbres.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
 
 public class MeepMeepTesting {
-    public static double location = 0;
     public static double startPoseX = 34;
     public static double startPoseY = -61;
-    public static double depositX = 34;
-    public static double depositY = -13;
+    public static double depositX = 33;
+    public static double depositY = -14;
     public static double startAngle = Math.toRadians(0);
     public static double depositAngle = Math.toRadians(0);
     public static double loadAngle = Math.toRadians(0);
     public static double parkAngle = Math.toRadians(0);
-    public static double loadX = 55.5;
+    public static double loadX = 57;
     public static double loadY = -12;
-    public static double parkX = 34 + 24 * (location - 1);
-    public static double parkY = depositY;
+    public static double parkX = 33;
+    public static double parkY = -14;
+
     public static void main(String[] args) throws InterruptedException {
         MeepMeep meepMeep = new MeepMeep(800);
 
@@ -41,7 +41,7 @@ public class MeepMeepTesting {
                                 .lineToLinearHeading(new Pose2d(depositX, depositY, depositAngle))
                                 .lineToLinearHeading(new Pose2d(loadX, loadY, loadAngle))
                                 .waitSeconds(1)
-                                .lineToLinearHeading(new Pose2d(parkX, parkY, depositAngle))
+                                .lineToLinearHeading(new Pose2d(parkX, parkY, parkAngle))
                                 .waitSeconds(5)
                                 .build()
 

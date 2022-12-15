@@ -106,7 +106,7 @@ public class NewAuton extends LinearOpMode {
         drive.resetLifts();
         // follow path to preload
         drive.clawClose();
-        Thread.sleep(1500);
+        Thread.sleep(1000);
 
         drive.liftConfig(2, false);
         telemetry.addData("countCones1", Constants.countCones);
@@ -140,7 +140,7 @@ public class NewAuton extends LinearOpMode {
 
             // grab cone
             drive.clawClose();
-            Thread.sleep(500);
+            Thread.sleep(300);
 
             drive.liftConfig(2, false);
 
@@ -163,12 +163,16 @@ public class NewAuton extends LinearOpMode {
 
         }
 
+        Thread.sleep(250);
+        drive.liftConfig(4, false);
         Thread.sleep(500);
         drive.clawOpen();
+        Thread.sleep(250);
+        drive.liftConfig(2, false);
         Thread.sleep(500);
 
         drive.setArm(Constants.armBackwardPos);
-        Thread.sleep(1000);
+        Thread.sleep(400);
 
         //drive.followTrajectory(toPark);
         drive.liftConfig(0, false);
