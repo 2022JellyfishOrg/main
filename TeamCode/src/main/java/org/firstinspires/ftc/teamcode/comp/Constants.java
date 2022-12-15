@@ -44,7 +44,7 @@ public class Constants {
 
 
     // Lift heights
-    public static final int lowLift = 530;
+    public static final int lowLift = 529;
     public static final int mediumLift = 765;
     public static final int sevenInches = 300;
     public static final int highLift = 1140;
