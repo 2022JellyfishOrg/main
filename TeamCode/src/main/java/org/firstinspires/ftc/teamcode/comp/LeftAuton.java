@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.hackerstuff.AprilTagDetectionPipeline;
 import org.firstinspires.ftc.teamcode.hackerstuff.Detector;
@@ -15,7 +16,7 @@ import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 
 @Autonomous
-public class NewAuton extends LinearOpMode {
+public class LeftAuton extends LinearOpMode {
 
     /* Declaring trajectories (toPreload and toDeposit are the same
     for now just made two different trajectories for simplicity)
@@ -69,33 +70,33 @@ public class NewAuton extends LinearOpMode {
         // Setting up trajectories and start position BEFORE starting
 
         // start position of robot (NEEDS TO BE ACCURATE TO ABOUT AN INCH OR LESS)
-        Pose2d startPose = new Pose2d(Constants.startPoseX, Constants.startPoseY, Constants.startAngle);
+        Pose2d startPose = new Pose2d(Constants.leftStartPoseX, Constants.leftStartPoseY, Constants.leftStartAngle);
 
         // setting robot "drive" position to the start position above
         drive.setPoseEstimate(startPose);
-        int pos = (36 + (24 * (signalZonePos - 2)));
+        int pos = (-36 + (24 * (signalZonePos - 2)));
 
         toPreload = drive.trajectoryBuilder(startPose)
-                .lineToLinearHeading(new Pose2d(Constants.depositX+1, Constants.depositY + 1, Constants.depositAngle))
+                .lineToLinearHeading(new Pose2d(Constants.leftDepositX+1, Constants.leftDepositY + 1, Constants.leftDepositAngle))
                 .addTemporalMarker(0.25, () -> drive.setArm(Constants.armAutonMedPos))
                 .build();
         toLoad = drive.trajectoryBuilder(toPreload.end())
-                .lineToLinearHeading(new Pose2d(Constants.loadX, Constants.loadY-0.5, Constants.loadAngle))
+                .lineToLinearHeading(new Pose2d(Constants.leftLoadX, Constants.leftLoadY-0.5, Constants.leftLoadAngle))
                 .build();
         toDeposit1 = drive.trajectoryBuilder(toLoad.end())
-                .lineToLinearHeading(new Pose2d(Constants.depositX + 2.5, Constants.depositY, Constants.depositAngle))
+                .lineToLinearHeading(new Pose2d(Constants.leftDepositX + 2.5, Constants.leftDepositY, Constants.leftDepositAngle))
                 .addTemporalMarker(0.25, () -> drive.setArm(Constants.armAutonMedPos))
                 .build();
         toDeposit2 = drive.trajectoryBuilder(toLoad.end())
-                .lineToLinearHeading(new Pose2d(Constants.depositX + 2.5, Constants.depositY + 0.3, Constants.depositAngle))
+                .lineToLinearHeading(new Pose2d(Constants.leftDepositX + 2.5, Constants.leftDepositY + 0.3, Constants.leftDepositAngle))
                 .addTemporalMarker(0.25, () -> drive.setArm(Constants.armAutonMedPos))
                 .build();
         toDeposit3 = drive.trajectoryBuilder(toLoad.end())
-                .lineToLinearHeading(new Pose2d(Constants.depositX + 2.5, Constants.depositY + 0.7, Constants.depositAngle))
+                .lineToLinearHeading(new Pose2d(Constants.leftDepositX + 2.5, Constants.leftDepositY + 0.7, Constants.leftDepositAngle))
                 .addTemporalMarker(0.25, () -> drive.setArm(Constants.armAutonMedPos))
                 .build();
         toPark = drive.trajectoryBuilder(toDeposit3.end())
-                .lineToLinearHeading(new Pose2d(pos, Constants.parkY, Constants.parkAngle))
+                .lineToLinearHeading(new Pose2d(pos, Constants.leftParkY, Constants.leftParkAngle))
                 .build();
 
         // move lift to high (0 is reset, 1 is low, 2 is medium, 3 is high))
@@ -149,8 +150,6 @@ public class NewAuton extends LinearOpMode {
                 drive.followTrajectory(toDeposit1);
             } else if (i == 1) {
                 drive.followTrajectory (toDeposit2);
-            } else if (i == 2) {
-                drive.followTrajectory(toDeposit3);
             } else {
                 drive.followTrajectory(toDeposit3);
             }

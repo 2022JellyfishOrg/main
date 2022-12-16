@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.comp;
+package org.firstinspires.ftc.teamcode;
 
 import org.openftc.apriltag.AprilTagDetection;
 
@@ -44,6 +44,7 @@ public class Constants {
 
 
     // Lift heights
+    public static final int inspectionLift = 300;
     public static final int lowLift = 529;
     public static final int mediumLift = 765;
     public static final int sevenInches = 300;
@@ -92,4 +93,16 @@ public class Constants {
     public static double loadY = -12;
     public static double parkX = 33;
     public static double parkY = -14;
+    public static double leftStartPoseX = -34;
+    public static double leftStartPoseY = -61;
+    public static double leftDepositX = -33;
+    public static double leftDepositY = -14;
+    public static double leftStartAngle = Math.toRadians(180);
+    public static double leftDepositAngle = Math.toRadians(180);
+    public static double leftLoadAngle = Math.toRadians(180);
+    public static double leftParkAngle = Math.toRadians(180);
+    public static double leftLoadX = -57;
+    public static double leftLoadY = -12;
+    public static double leftParkX = -33;
+    public static double leftParkY = -14;
 }

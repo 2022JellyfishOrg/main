@@ -7,8 +7,10 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.Constants;
+
 @TeleOp
-public class NewTele extends LinearOpMode {
+public class Teleop extends LinearOpMode {
     ElapsedTime endgameTimer = new ElapsedTime();
     ElapsedTime liftTimer = new ElapsedTime();
     ElapsedTime isToggled = new ElapsedTime();

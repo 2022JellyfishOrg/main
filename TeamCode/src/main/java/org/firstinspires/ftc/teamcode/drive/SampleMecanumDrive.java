@@ -27,7 +27,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
-import org.firstinspires.ftc.teamcode.comp.Constants;
+import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceBuilder;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceRunner;
@@ -204,6 +204,8 @@ public class SampleMecanumDrive extends MecanumDrive {
             } else if (height == 4) {
                 ticks = Constants.mediumLift;
                 Constants.liftSpeed = 1;
+            } else if (height == 5) {
+                ticks = Constants.inspectionLift;
             } else {
                 ticks = 0;
                 Constants.liftSpeed = 0.5;

@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.teamcode.comp.Constants;
+import org.firstinspires.ftc.teamcode.Constants;
 
 @TeleOp
 public class AutonLiftTest extends LinearOpMode {

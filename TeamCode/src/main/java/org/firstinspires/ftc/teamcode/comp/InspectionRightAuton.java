@@ -16,7 +16,7 @@ import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 
 @Autonomous
-public class OldAuton extends LinearOpMode {
+public class InspectionRightAuton extends LinearOpMode {
 
     /* Declaring trajectories (toPreload and toDeposit are the same
     for now just made two different trajectories for simplicity)
@@ -104,10 +104,13 @@ public class OldAuton extends LinearOpMode {
 
         // rotate arm to back
 
-        drive.resetLifts();
-        // follow path to preload
+        drive.liftConfig(1, false);
+        Thread.sleep(750);
+        drive.setArm(Constants.armBackwardPos);
+        Thread.sleep(750);
+        drive.liftConfig(0,false);
+        Thread.sleep(1000);
         drive.clawClose();
-        Thread.sleep(1500);
 
         drive.liftConfig(2, false);
         telemetry.addData("countCones1", Constants.countCones);
@@ -117,11 +120,15 @@ public class OldAuton extends LinearOpMode {
 
 
         // CYCLES FOR "cycles" amount of times
-        for (int i = 0; i < Constants.cycles; i++) {
+        for (int i = 0; i < Constants.cycles - 1; i++) {
             // open claw
-            Thread.sleep(1000);
+            Thread.sleep(250);
+            drive.liftConfig(4, false);
+            Thread.sleep(500);
             drive.clawOpen();
             Thread.sleep(250);
+            drive.liftConfig(2, false);
+            Thread.sleep(500);
 
             // reset lift to auton cone height
             timer.reset();
@@ -129,7 +136,7 @@ public class OldAuton extends LinearOpMode {
             drive.followTrajectory(toLoad);
 
             drive.liftConfig(heights[i], true);
-            Thread.sleep(2000);
+            Thread.sleep(800);
             Constants.countCones--;
             telemetry.addData("countCones2", Constants.countCones);
             telemetry.addData("ticks", SampleMecanumDrive.ticks);
@@ -137,19 +144,15 @@ public class OldAuton extends LinearOpMode {
 
             // grab cone
             drive.clawClose();
-            Thread.sleep(500);
+            Thread.sleep(300);
 
             drive.liftConfig(2, false);
 
-            // drive to auton cones
+            // drive to med junc (temporal marker saying when to move arm INSIDE trajectory, which is why we don't need to state it here)
             if (i == 0) {
                 drive.followTrajectory(toDeposit1);
-            } else if (i == 1) {
-                drive.followTrajectory (toDeposit2);
-            } else if (i == 2) {
-                drive.followTrajectory(toDeposit3);
             } else {
-                drive.followTrajectory(toDeposit3);
+                drive.followTrajectory (toDeposit2);
             }
 
 
@@ -160,12 +163,16 @@ public class OldAuton extends LinearOpMode {
 
         }
 
+        Thread.sleep(250);
+        drive.liftConfig(4, false);
         Thread.sleep(500);
         drive.clawOpen();
+        Thread.sleep(250);
+        drive.liftConfig(2, false);
         Thread.sleep(500);
 
         drive.setArm(Constants.armBackwardPos);
-        Thread.sleep(1000);
+        Thread.sleep(400);
 
         //drive.followTrajectory(toPark);
         drive.liftConfig(0, false);
