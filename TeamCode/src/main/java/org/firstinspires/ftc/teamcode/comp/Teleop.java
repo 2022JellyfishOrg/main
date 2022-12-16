@@ -94,11 +94,19 @@ public class Teleop extends LinearOpMode {
             }
 
             // Drivetrain movement
-
-            double denomMult = gamepad1.right_trigger * 3;
-            double y = gamepad1.left_stick_y * Constants.denominator * denomMult;// Remember, this is reversed!
-            double x = -gamepad1.left_stick_x * 1.1 * Constants.denominator * denomMult; // Counteract imperfect strafing
-            double rx = gamepad1.right_stick_x * Constants.denominator * denomMult; // turning
+            double mult;
+            if (gamepad2.right_trigger == 0) {
+                mult = 1;
+            } else if (gamepad2.right_trigger <= 0.4 && gamepad2.right_trigger > 0) {
+                mult = 2;
+            } else if (gamepad2.right_trigger <= 0.8 && gamepad2.right_trigger > 0.4) {
+                mult = 3;
+            } else {
+                mult = 4;
+            }
+            double y = gamepad1.left_stick_y * Constants.denominator * mult;// Remember, this is reversed!
+            double x = -gamepad1.left_stick_x * 1.1 * Constants.denominator * mult;// Counteract imperfect strafing
+            double rx = gamepad1.right_stick_x * Constants.denominator * mult; // turning
 
             double frontLeftPower = (y + x + rx);
             double backLeftPower = (y - x + rx);
@@ -211,9 +219,9 @@ public class Teleop extends LinearOpMode {
                 isMacro = false;
                 Constants.denominator = 0.6;
             } else if (gamepad2.left_bumper) {
-                if (lift1.getCurrentPosition() > Constants.sevenInches) {
-                    lift1.setTargetPosition(lift1.getCurrentPosition() - Constants.sevenInches);
-                    lift2.setTargetPosition(lift2.getCurrentPosition() - Constants.sevenInches);
+                if (lift1.getCurrentPosition() >= 100) {
+                    lift1.setTargetPosition(lift1.getCurrentPosition() - 100);
+                    lift2.setTargetPosition(lift2.getCurrentPosition() - 100);
                     lift1.setPower(Constants.upSpeed);
                     lift2.setPower(Constants.upSpeed);
                     lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -221,9 +229,9 @@ public class Teleop extends LinearOpMode {
                     liftActive = true;
                 }
             } else if (gamepad2.right_bumper) {
-                if (lift1.getCurrentPosition() < (Constants.highLift + 100 - Constants.sevenInches)) {
-                    lift1.setTargetPosition(lift1.getCurrentPosition() + Constants.sevenInches);
-                    lift2.setTargetPosition(lift2.getCurrentPosition() + Constants.sevenInches);
+                if (lift1.getCurrentPosition() <=(Constants.highLift)) {
+                    lift1.setTargetPosition(lift1.getCurrentPosition() + 100);
+                    lift2.setTargetPosition(lift2.getCurrentPosition() + 100);
                     lift1.setPower(Constants.upSpeed);
                     lift2.setPower(Constants.upSpeed);
                     lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);

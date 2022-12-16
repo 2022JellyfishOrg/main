@@ -15,7 +15,7 @@ public class Constants {
 
     public static final int cycles = 3; // number of auton cycles
     public static double turnDenom = 0.8; // turn factor in tele
-    public static double denominator = 0.5; // drive factor in tele
+    public static double denominator = 0.2; // drive factor in tele
 
     // claw positions
     public static final double openClaw = 0;
@@ -46,7 +46,7 @@ public class Constants {
     // Lift heights
     public static final int inspectionLift = 300;
     public static final int lowLift = 529;
-    public static final int mediumLift = 765;
+    public static final int mediumLift = 780;
     public static final int sevenInches = 300;
     public static final int highLift = 1140;
     public static double liftSpeed = 0.8;
@@ -90,7 +90,7 @@ public class Constants {
     public static double loadAngle = Math.toRadians(0);
     public static double parkAngle = Math.toRadians(0);
     public static double loadX = 57;
-    public static double loadY = -12;
+    public static double loadY = -11.5;
     public static double parkX = 33;
     public static double parkY = -14;
     public static double leftStartPoseX = -34;

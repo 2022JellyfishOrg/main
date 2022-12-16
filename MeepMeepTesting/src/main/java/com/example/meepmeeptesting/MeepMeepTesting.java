@@ -8,17 +8,18 @@ import com.noahbres.meepmeep.roadrunner.DefaultBotBuilder;
 import com.noahbres.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
 
 public class MeepMeepTesting {
-    public static double startPoseX = -34;
+
+    public static double startPoseX = 34;
     public static double startPoseY = -61;
-    public static double depositX = -33;
+    public static double depositX = 33;
     public static double depositY = -14;
-    public static double startAngle = Math.toRadians(180);
-    public static double depositAngle = Math.toRadians(180);
-    public static double loadAngle = Math.toRadians(180);
-    public static double parkAngle = Math.toRadians(180);
-    public static double loadX = -57;
-    public static double loadY = -12;
-    public static double parkX = -33;
+    public static double startAngle = Math.toRadians(0);
+    public static double depositAngle = Math.toRadians(0);
+    public static double loadAngle = Math.toRadians(0);
+    public static double parkAngle = Math.toRadians(0);
+    public static double loadX = 57;
+    public static double loadY = -11.5;
+    public static double parkX = 33;
     public static double parkY = -14;
 
     public static void main(String[] args) throws InterruptedException {
@@ -31,18 +32,7 @@ public class MeepMeepTesting {
                 .followTrajectorySequence(drive ->
                         drive.trajectorySequenceBuilder(new Pose2d(startPoseX, startPoseY, startAngle))
                                 .lineToLinearHeading(new Pose2d(depositX, depositY, depositAngle))
-                                .lineToLinearHeading(new Pose2d(loadX, loadY, loadAngle))
-                                .lineToLinearHeading(new Pose2d(depositX, depositY, depositAngle))
-                                .lineToLinearHeading(new Pose2d(loadX, loadY, loadAngle))
-                                .lineToLinearHeading(new Pose2d(depositX, depositY, depositAngle))
-                                .lineToLinearHeading(new Pose2d(loadX, loadY, loadAngle))
-                                .lineToLinearHeading(new Pose2d(depositX, depositY, depositAngle))
-                                .lineToLinearHeading(new Pose2d(loadX, loadY, loadAngle))
-                                .lineToLinearHeading(new Pose2d(depositX, depositY, depositAngle))
-                                .lineToLinearHeading(new Pose2d(loadX, loadY, loadAngle))
-                                .waitSeconds(1)
-                                .lineToLinearHeading(new Pose2d(parkX, parkY, parkAngle))
-                                .waitSeconds(5)
+                                .splineToLinearHeading(new Pose2d(loadX, loadY + 0.5, loadAngle), 0)
                                 .build()
 
 

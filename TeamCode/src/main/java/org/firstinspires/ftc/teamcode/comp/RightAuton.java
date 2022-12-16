@@ -27,6 +27,7 @@ public class RightAuton extends LinearOpMode {
     Trajectory toDeposit1;
     Trajectory toDeposit2;
     Trajectory toDeposit3;
+    Trajectory toRight;
     ElapsedTime timer = new ElapsedTime();
     OpenCvCamera webcam;
     int signalZonePos = 0;
@@ -77,25 +78,28 @@ public class RightAuton extends LinearOpMode {
         int pos = (36 + (24 * (signalZonePos - 2)));
 
         toPreload = drive.trajectoryBuilder(startPose)
-                .lineToLinearHeading(new Pose2d(Constants.depositX+1, Constants.depositY + 1, Constants.depositAngle))
+                .lineToLinearHeading(new Pose2d(Constants.depositX + 0.5, Constants.depositY-2, Constants.depositAngle))
                 .addTemporalMarker(0.25, () -> drive.setArm(Constants.armAutonMedPos))
                 .build();
         toLoad = drive.trajectoryBuilder(toPreload.end())
-                .lineToLinearHeading(new Pose2d(Constants.loadX, Constants.loadY-0.5, Constants.loadAngle))
+                .splineToLinearHeading(new Pose2d(Constants.loadX + 1.5, Constants.loadY + 1, Constants.loadAngle), 0)
                 .build();
         toDeposit1 = drive.trajectoryBuilder(toLoad.end())
-                .lineToLinearHeading(new Pose2d(Constants.depositX + 2.5, Constants.depositY, Constants.depositAngle))
+                .lineToLinearHeading(new Pose2d(Constants.depositX + 1.25, Constants.depositY - 5, Constants.depositAngle))
                 .addTemporalMarker(0.25, () -> drive.setArm(Constants.armAutonMedPos))
                 .build();
         toDeposit2 = drive.trajectoryBuilder(toLoad.end())
-                .lineToLinearHeading(new Pose2d(Constants.depositX + 2.5, Constants.depositY + 0.3, Constants.depositAngle))
+                .lineToLinearHeading(new Pose2d(Constants.depositX + 1.5, Constants.depositY - 5.9, Constants.depositAngle))
                 .addTemporalMarker(0.25, () -> drive.setArm(Constants.armAutonMedPos))
                 .build();
         toDeposit3 = drive.trajectoryBuilder(toLoad.end())
-                .lineToLinearHeading(new Pose2d(Constants.depositX + 2.5, Constants.depositY + 0.7, Constants.depositAngle))
+                .lineToLinearHeading(new Pose2d(Constants.depositX + 1.5, Constants.depositY - 6.6, Constants.depositAngle))
                 .addTemporalMarker(0.25, () -> drive.setArm(Constants.armAutonMedPos))
                 .build();
-        toPark = drive.trajectoryBuilder(toDeposit3.end())
+        toRight = drive.trajectoryBuilder(toDeposit3.end())
+                .strafeLeft(6)
+                .build();
+        toPark = drive.trajectoryBuilder(toRight.end())
                 .lineToLinearHeading(new Pose2d(pos, Constants.parkY, Constants.parkAngle))
                 .build();
 
@@ -107,7 +111,7 @@ public class RightAuton extends LinearOpMode {
         drive.resetLifts();
         // follow path to preload
         drive.clawClose();
-        Thread.sleep(1000);
+        Thread.sleep(1750);
 
         drive.liftConfig(2, false);
         telemetry.addData("countCones1", Constants.countCones);
@@ -117,11 +121,11 @@ public class RightAuton extends LinearOpMode {
 
 
         // CYCLES FOR "cycles" amount of times
-        for (int i = 0; i < Constants.cycles; i++) {
+        for (int i = 0; i < Constants.cycles - 1; i++) {
+            Thread.sleep(1000);
             // open claw
+            drive.liftConfig(5, false);
             Thread.sleep(250);
-            drive.liftConfig(4, false);
-            Thread.sleep(500);
             drive.clawOpen();
             Thread.sleep(250);
             drive.liftConfig(2, false);
@@ -130,10 +134,12 @@ public class RightAuton extends LinearOpMode {
             // reset lift to auton cone height
             timer.reset();
             drive.setArm(Constants.armBackwardPos);
+            drive.followTrajectory(toRight);
+            drive.liftConfig(heights[0], true);
+            Thread.sleep(1000);
             drive.followTrajectory(toLoad);
+            Thread.sleep(500);
 
-            drive.liftConfig(heights[i], true);
-            Thread.sleep(800);
             Constants.countCones--;
             telemetry.addData("countCones2", Constants.countCones);
             telemetry.addData("ticks", SampleMecanumDrive.ticks);
@@ -141,7 +147,7 @@ public class RightAuton extends LinearOpMode {
 
             // grab cone
             drive.clawClose();
-            Thread.sleep(300);
+            Thread.sleep(700);
 
             drive.liftConfig(2, false);
 
@@ -161,10 +167,10 @@ public class RightAuton extends LinearOpMode {
             // Go back to deposit
 
         }
+        Thread.sleep(1000);
 
+        drive.liftConfig(5, false);
         Thread.sleep(250);
-        drive.liftConfig(4, false);
-        Thread.sleep(500);
         drive.clawOpen();
         Thread.sleep(250);
         drive.liftConfig(2, false);
@@ -175,7 +181,11 @@ public class RightAuton extends LinearOpMode {
 
         //drive.followTrajectory(toPark);
         drive.liftConfig(0, false);
+        drive.clawOpen();
+
+        drive.followTrajectory(toRight);
         drive.followTrajectory(toPark);
+        drive.clawOpen();
 
     }
 

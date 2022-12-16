@@ -205,7 +205,7 @@ public class SampleMecanumDrive extends MecanumDrive {
                 ticks = Constants.mediumLift;
                 Constants.liftSpeed = 1;
             } else if (height == 5) {
-                ticks = Constants.inspectionLift;
+                ticks = Constants.mediumLift - 150;
             } else {
                 ticks = 0;
                 Constants.liftSpeed = 0.5;
