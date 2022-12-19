@@ -22,7 +22,7 @@ import org.openftc.easyopencv.OpenCvWebcam;
 import java.util.ArrayList;
 
 @Autonomous
-public class RightAuton extends LinearOpMode {
+public class ParkRightAuton extends LinearOpMode {
 
     /* Declaring trajectories (toPreload and toDeposit are the same
     for now just made two different trajectories for simplicity)
@@ -80,12 +80,23 @@ public class RightAuton extends LinearOpMode {
 
         // setting robot "drive" position to the start position above
         drive.setPoseEstimate(startPose);
-        int pos = (36 + (24 * (signalZonePos - 2)));
-
+        int pos;
+        if (signalZonePos == 0) {
+            pos = 36;
+        } else {
+            pos = (36 + (24 * (signalZonePos - 2)));
+        }
+/*
         toPreload = drive.trajectoryBuilder(startPose)
-                .lineToLinearHeading(new Pose2d(Constants.depositX, Constants.depositY , Constants.depositAngle))
-                .addTemporalMarker(0.25, () -> drive.setArm(Constants.armAutonMedPos))
+                .lineToLinearHeading(new Pose2d(Constants.depositX, Constants.depositY -27, Constants.depositAngle))
+                .addTemporalMarker(0.25, () -> drive.liftConfig(6, false))
                 .build();
+
+ */
+        toPreload = drive.trajectoryBuilder(startPose)
+                .lineToLinearHeading(new Pose2d(37, -33, Constants.parkAngle))
+                .build();
+        /*
         toLoad = drive.trajectoryBuilder(toPreload.end())
                 .lineToLinearHeading(new Pose2d(Constants.loadX, Constants.loadY-0.5, Constants.loadAngle))
                 .build();
@@ -101,8 +112,10 @@ public class RightAuton extends LinearOpMode {
                 .lineToLinearHeading(new Pose2d(Constants.depositX + 2.5, Constants.depositY + 0.7, Constants.depositAngle))
                 .addTemporalMarker(0.25, () -> drive.setArm(Constants.armAutonMedPos))
                 .build();
-        toPark = drive.trajectoryBuilder(toDeposit3.end())
-                .lineToLinearHeading(new Pose2d(pos, Constants.parkY, Constants.parkAngle))
+
+         */
+        toPark = drive.trajectoryBuilder(toPreload.end())
+                .lineToLinearHeading(new Pose2d(pos, -33, Constants.parkAngle))
                 .build();
 
         // move lift to high (0 is reset, 1 is low, 2 is medium, 3 is high))
@@ -110,10 +123,7 @@ public class RightAuton extends LinearOpMode {
 
         // rotate arm to back
 
-        drive.resetLifts();
         // follow path to preload
-        drive.clawClose();
-        Thread.sleep(1500);
 
         /*drive.liftConfig(2, false);
         telemetry.addData("countCones1", Constants.countCones);
@@ -121,55 +131,9 @@ public class RightAuton extends LinearOpMode {
         telemetry.update();
 
          */
+        //drive.clawClose();
+        //Thread.sleep(2500);
         drive.followTrajectory(toPreload);
-
-
-        // CYCLES FOR "cycles" amount of times
-        /*
-        for (int i = 0; i < Constants.cycles; i++) {
-
-            // open claw
-            Thread.sleep(1000);
-            drive.clawOpen();
-            Thread.sleep(250);
-
-            // reset lift to auton cone height
-            timer.reset();
-            drive.setArm(Constants.armBackwardPos);
-            drive.followTrajectory(toLoad);
-
-            drive.liftConfig(heights[i], true);
-            Thread.sleep(2000);
-            Constants.countCones--;
-            telemetry.addData("countCones2", Constants.countCones);
-            telemetry.addData("ticks", SampleMecanumDrive.ticks);
-            telemetry.update();
-
-            // grab cone
-            drive.clawClose();
-            Thread.sleep(500);
-
-            drive.liftConfig(2, false);
-
-            // drive to auton cones
-            if (i == 0) {
-                drive.followTrajectory(toDeposit1);
-            } else if (i == 1) {
-                drive.followTrajectory (toDeposit2);
-            } else if (i == 2) {
-                drive.followTrajectory(toDeposit3);
-            } else {
-                drive.followTrajectory(toDeposit3);
-            }
-
-
-
-            // moving cone up BEFORE following path
-
-            // Go back to deposit
-
-        }
-        */
         drive.followTrajectory(toPark);
 
     }

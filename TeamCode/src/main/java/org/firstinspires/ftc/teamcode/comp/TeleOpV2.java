@@ -9,13 +9,17 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Constants;
 
+import java.util.Timer;
+
 @TeleOp
-public class Teleop extends LinearOpMode {
+public class TeleOpV2 extends LinearOpMode {
     ElapsedTime endgameTimer = new ElapsedTime();
     ElapsedTime liftTimer = new ElapsedTime();
     ElapsedTime isToggled = new ElapsedTime();
     DcMotor backLeft, backRight, frontLeft, frontRight, lift1, lift2;
-
+    double mult;
+    int pos = 90;
+    ElapsedTime posTimer = new ElapsedTime();
 
     boolean liftActive = false;
     int ticks = 0;
@@ -79,27 +83,42 @@ public class Teleop extends LinearOpMode {
         liftTimer.reset();
 
         while (opModeIsActive()) {
-            if (liftTimer.milliseconds() > 500 && liftActive) {
+            if (liftTimer.milliseconds() > 400 && liftActive) {
                 if (isMacro) {
-                    arm.setPosition(armPos);
-                } else {
+                    if (pos == 90) {
+                        arm.setPosition(Constants.armSidewayPos);
+                    } else {
+                        arm.setPosition(Constants.armForwardPos);
+                    }
+                }
+                liftActive = false;
+            }
+             else if (liftTimer.milliseconds() > 100 && liftActive) {
+                if (!isMacro) {
                     lift1.setTargetPosition(ticks);
                     lift2.setTargetPosition(ticks);
-                    lift1.setPower(0.6);
-                    lift2.setPower(0.6);
+                    lift1.setPower(0.8);
+                    lift2.setPower(0.8);
                     lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 }
                 liftActive = false;
             }
 
+
+
+
+
+
+            telemetry.addData("New Pos: ", pos);
+            telemetry.update();
+
             // Drivetrain movement
-            double mult;
-            if (gamepad2.right_trigger == 0) {
+            if (gamepad1.right_trigger == 0) {
                 mult = 1;
-            } else if (gamepad2.right_trigger <= 0.4 && gamepad2.right_trigger > 0) {
+            } else if (gamepad1.right_trigger <= 0.4 && gamepad1.right_trigger > 0) {
                 mult = 2;
-            } else if (gamepad2.right_trigger <= 0.8 && gamepad2.right_trigger > 0.4) {
+            } else if (gamepad1.right_trigger <= 0.8 && gamepad1.right_trigger > 0.4) {
                 mult = 3;
             } else {
                 mult = 4;
@@ -123,16 +142,18 @@ public class Teleop extends LinearOpMode {
                 lift1.setPower(0);
                 lift2.setPower(0);
             }
-            if (gamepad2.left_stick_y < 0 && lift1.getCurrentPosition() >= -50) {
-                lift1.setTargetPosition(lift1.getCurrentPosition() - 60);
-                lift2.setTargetPosition(lift2.getCurrentPosition() - 60);
+            if (gamepad2.left_stick_y > 0 && lift1.getCurrentPosition() >= -50) {
+                lift1.setTargetPosition(lift1.getCurrentPosition() - 100);
+                lift2.setTargetPosition(lift2.getCurrentPosition() - 100);
                 lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            } else if (gamepad2.left_stick_y > 0 && lift1.getCurrentPosition() <= Constants.highLift + 50) {
-                lift1.setTargetPosition(lift1.getCurrentPosition() + 60);
-                lift2.setTargetPosition(lift1.getCurrentPosition() + 60);
+                Thread.sleep(50);
+            } else if (gamepad2.left_stick_y < 0 && lift1.getCurrentPosition() <= Constants.highLift + 50) {
+                lift1.setTargetPosition(lift1.getCurrentPosition() + 100);
+                lift2.setTargetPosition(lift1.getCurrentPosition() + 100);
                 lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                Thread.sleep(50);
             }
 
             // field centric:
@@ -157,6 +178,18 @@ public class Teleop extends LinearOpMode {
             backRight.setPower(backRightPower);
 
    */
+            if (gamepad2.left_bumper) {
+                if (posTimer.milliseconds() > 500) {
+                    if (pos == 90) {
+                        pos = 180;
+                    } else {
+                        pos = 90;
+                    }
+                    telemetry.addData("new pos: ", pos);
+                    telemetry.update();
+                    posTimer.reset();
+                }
+            }
 
             if ((gamepad1.a && !Constants.lastA)) {
                 Constants.direction = !Constants.direction;
@@ -180,7 +213,6 @@ public class Teleop extends LinearOpMode {
             } else if (gamepad2.x) {
                 arm.setPosition(Constants.armAutonMedPos);
             }
-
             // lift macros
             if (gamepad2.dpad_down) {
                 lift1.setTargetPosition(Constants.lowLift);
@@ -190,7 +222,6 @@ public class Teleop extends LinearOpMode {
                 lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 liftActive = true;
-                Constants.denominator = 0.2;
             } else if (gamepad2.dpad_left) {
                 lift1.setTargetPosition(Constants.mediumLift);
                 lift2.setTargetPosition(Constants.mediumLift);
@@ -200,7 +231,6 @@ public class Teleop extends LinearOpMode {
                 lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 liftActive = true;
                 isMacro = true;
-                Constants.denominator = 0.2;
             } else if (gamepad2.dpad_up) {
                 lift1.setTargetPosition(Constants.highLift);
                 lift2.setTargetPosition(Constants.highLift);
@@ -210,42 +240,22 @@ public class Teleop extends LinearOpMode {
                 lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 liftActive = true;
                 isMacro = true;
-                Constants.denominator = 0.2;
             } else if (gamepad2.dpad_right) {
                 liftTimer.reset();
                 ticks = 0;
                 arm.setPosition(Constants.armBackwardPos);
                 liftActive = true;
                 isMacro = false;
-                Constants.denominator = 0.6;
-            } else if (gamepad2.left_bumper) {
-                if (lift1.getCurrentPosition() >= 100) {
-                    lift1.setTargetPosition(lift1.getCurrentPosition() - 100);
-                    lift2.setTargetPosition(lift2.getCurrentPosition() - 100);
-                    lift1.setPower(Constants.upSpeed);
-                    lift2.setPower(Constants.upSpeed);
-                    lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    liftActive = true;
-                }
-            } else if (gamepad2.right_bumper) {
-                if (lift1.getCurrentPosition() <=(Constants.highLift)) {
-                    lift1.setTargetPosition(lift1.getCurrentPosition() + 100);
-                    lift2.setTargetPosition(lift2.getCurrentPosition() + 100);
-                    lift1.setPower(Constants.upSpeed);
-                    lift2.setPower(Constants.upSpeed);
-                    lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    liftActive = true;
-                }
-
-                // endgame alert
-                if (endgameTimer.seconds() >= 85) {
-                    gamepad1.rumble(500);
-                    gamepad2.rumble(500);
-                }
-                telemetry.update();
             }
+            // endgame alert
+            if (endgameTimer.seconds() >= 85) {
+                gamepad1.rumble(500);
+                gamepad2.rumble(500);
+            }
+            telemetry.update();
+            telemetry.addData("motorPower", frontLeft.getPower());
+            telemetry.update();
         }
     }
 }
+

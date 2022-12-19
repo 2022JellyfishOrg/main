@@ -15,18 +15,18 @@ public class Constants {
 
     public static final int cycles = 3; // number of auton cycles
     public static double turnDenom = 0.8; // turn factor in tele
-    public static double denominator = 0.2; // drive factor in tele
+    public static double denominator = 0.15; // drive factor in tele
 
     // claw positions
     public static final double openClaw = 0;
     public static final double closedClaw = 1;
 
     // arm positions
-    public static final double offset = 0;
-    public static final double armForwardPos = 0.255 + offset;
-    public static final double armSidewayPos = 0.3125 + offset;
-    public static final double armBackwardPos = 0.365 + offset;
-    public static final double armAutonMedPos = armForwardPos + (armSidewayPos - armForwardPos)/2;
+    public static double offset = 0.03;
+    public static final double armForwardPos = 0.248 + offset;
+    public static final double armSidewayPos = 0.313 + offset;
+    public static final double armBackwardPos = 0.359 + offset;
+    public static final double armAutonMedPos = armBackwardPos - ((armBackwardPos - armSidewayPos)/2);
 
     // Side cones
     public static int countCones = 5; // number of side cones (changes value)
