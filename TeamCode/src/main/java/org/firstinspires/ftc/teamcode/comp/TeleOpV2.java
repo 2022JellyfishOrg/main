@@ -1,116 +1,112 @@
+// with through-bore and limit switch
+
 package org.firstinspires.ftc.teamcode.comp;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.TouchSensor;
+
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Constants;
+import org.firstinspires.ftc.teamcode.util.Encoder;
 
-import java.util.Timer;
 
 @TeleOp
 public class TeleOpV2 extends LinearOpMode {
+    ElapsedTime limitTimer = new ElapsedTime();
     ElapsedTime endgameTimer = new ElapsedTime();
-    ElapsedTime liftTimer = new ElapsedTime();
-    ElapsedTime isToggled = new ElapsedTime();
-    DcMotor backLeft, backRight, frontLeft, frontRight, lift1, lift2;
-    double mult;
-    int pos = 90;
     ElapsedTime posTimer = new ElapsedTime();
 
-    boolean liftActive = false;
-    int ticks = 0;
-    double clawToggle, armPos;
-    boolean isBackward = true;
-    boolean isMacro = true;
+    ColorSensor colorSensor;
+    TouchSensor limitSwitch;
+    DistanceSensor distanceSensor;
 
+    DcMotorEx backLeft, backRight, frontLeft, frontRight, lift1, lift2;
+    Encoder liftEncoder;
 
+    double mult;
+
+    int armPos = 90;
+
+    int targetTicks = 0; // will end up being VERY large (about the reciprocal of coefficient)
+    double coefficient = 1.0 / (8192 * 2.5);
+    // conversion from ticks to power has to be TINY, because you have 8192 ticks per revolution
+
+    double clawToggle;
     Servo claw, arm;
     BNO055IMU imu;
-    int turnfac;
 
 
     @Override
     public void runOpMode() throws InterruptedException {
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        // Technically this is the default, however specifying it is clearer
         parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
-        // Without this, data retrieving from the IMU throws an exception
         imu.initialize(parameters);
 
-        frontLeft = hardwareMap.get(DcMotor.class, "fl");
-        frontRight = hardwareMap.get(DcMotor.class, "fr");
-        backLeft = hardwareMap.get(DcMotor.class, "bl");
-        backRight = hardwareMap.get(DcMotor.class, "br");
+        frontLeft = hardwareMap.get(DcMotorEx.class, "fl");
+        frontRight = hardwareMap.get(DcMotorEx.class, "fr");
+        backLeft = hardwareMap.get(DcMotorEx.class, "bl");
+        backRight = hardwareMap.get(DcMotorEx.class, "br");
 
-        lift1 = hardwareMap.get(DcMotor.class, "lift1");
-        lift2 = hardwareMap.get(DcMotor.class, "lift2");
+        lift1 = hardwareMap.get(DcMotorEx.class, "lift1");
+        lift2 = hardwareMap.get(DcMotorEx.class, "lift2");
 
         claw = hardwareMap.get(Servo.class, "claw");
         arm = hardwareMap.get(Servo.class, "arm");
+        colorSensor = hardwareMap.colorSensor.get("colorSensor");
+        limitSwitch = hardwareMap.touchSensor.get("limitSwitch");
+        liftEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, "br"));
+        distanceSensor = hardwareMap.get(DistanceSensor.class, "distanceSensor");
 
-        frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        frontLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        backLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        backRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
 
-        lift1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        lift2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontRight.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        frontLeft.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        backLeft.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        backRight.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
-        frontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        frontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontLeft.setDirection(DcMotorEx.Direction.REVERSE);
+        backLeft.setDirection(DcMotorEx.Direction.REVERSE);
 
-        lift1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        lift2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lift1.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        lift2.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
 
-        frontLeft.setDirection(DcMotor.Direction.REVERSE);
-        backLeft.setDirection(DcMotor.Direction.REVERSE);
+        frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);;
+        backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        lift1.setDirection(DcMotor.Direction.REVERSE);
-        lift2.setDirection(DcMotor.Direction.REVERSE);
+        lift1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lift2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lift1.setDirection(DcMotorEx.Direction.REVERSE);
+        lift2.setDirection(DcMotorEx.Direction.REVERSE);
+        liftEncoder.setDirection(Encoder.Direction.REVERSE);
+
 
 
         waitForStart();
 
-        endgameTimer.reset();
-        isToggled.reset();
-        liftTimer.reset();
 
         while (opModeIsActive()) {
-            if (liftTimer.milliseconds() > 400 && liftActive) {
-                if (isMacro) {
-                    if (pos == 90) {
-                        arm.setPosition(Constants.armSidewayPos);
-                    } else {
-                        arm.setPosition(Constants.armForwardPos);
-                    }
-                }
-                liftActive = false;
-            }
-             else if (liftTimer.milliseconds() > 100 && liftActive) {
-                if (!isMacro) {
-                    lift1.setTargetPosition(ticks);
-                    lift2.setTargetPosition(ticks);
-                    lift1.setPower(0.8);
-                    lift2.setPower(0.8);
-                    lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                }
-                liftActive = false;
-            }
-
-
-
-
-
-
-            telemetry.addData("New Pos: ", pos);
+            telemetry.addData("targetTicks", targetTicks);
+            telemetry.addData("liftHeight", liftEncoder.getCurrentPosition());
+            telemetry.addData("red", colorSensor.red());
+            telemetry.addData("blue", colorSensor.blue());
+            telemetry.addData("limit switch", limitSwitch.isPressed());
+            telemetry.addData("distance sensor", distanceSensor.getDistance(DistanceUnit.INCH));
             telemetry.update();
 
             // Drivetrain movement
@@ -123,48 +119,18 @@ public class TeleOpV2 extends LinearOpMode {
             } else {
                 mult = 4;
             }
+
             double y = gamepad1.left_stick_y * Constants.denominator * mult;// Remember, this is reversed!
             double x = -gamepad1.left_stick_x * 1.1 * Constants.denominator * mult;// Counteract imperfect strafing
-            double rx = gamepad1.right_stick_x * Constants.denominator * mult; // turning
+            double rx = gamepad1.right_stick_x * Constants.denominator * mult;
 
-            double frontLeftPower = (y + x + rx);
-            double backLeftPower = (y - x + rx);
-            double frontRightPower = (y - x - rx);
-            double backRightPower = (y + x - rx);
+            double botHeading = -imu.getAngularOrientation().firstAngle;
 
-
-            frontLeft.setPower(frontLeftPower);
-            backLeft.setPower(backLeftPower);
-            frontRight.setPower(frontRightPower);
-            backRight.setPower(backRightPower);
-
-            if (lift1.getCurrentPosition() <= 0 || lift2.getCurrentPosition() <= 0) {
-                lift1.setPower(0);
-                lift2.setPower(0);
-            }
-            if (gamepad2.left_stick_y > 0 && lift1.getCurrentPosition() >= -50) {
-                lift1.setTargetPosition(lift1.getCurrentPosition() - 100);
-                lift2.setTargetPosition(lift2.getCurrentPosition() - 100);
-                lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                Thread.sleep(50);
-            } else if (gamepad2.left_stick_y < 0 && lift1.getCurrentPosition() <= Constants.highLift + 50) {
-                lift1.setTargetPosition(lift1.getCurrentPosition() + 100);
-                lift2.setTargetPosition(lift1.getCurrentPosition() + 100);
-                lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                Thread.sleep(50);
-            }
-
-            // field centric:
-
-           /* double botHeading = -imu.getAngularOrientation().firstAngle + 90;
-
-            double rotX = (x * Math.cos(botHeading) - y * Math.sin(botHeading));
+            double rotX = x * Math.cos(botHeading) - y * Math.sin(botHeading);
             double rotY = x * Math.sin(botHeading) + y * Math.cos(botHeading);
 
-            // Constants.denominator is the largest motor power (absolute value) or 1
-            // This ensuclawToggle all the powers maintain the same ratio, but only when
+            // Denominator is the largest motor power (absolute value) or 1
+            // This ensures all the powers maintain the same ratio, but only when
             // at least one is out of the range [-1, 1]
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
             double frontLeftPower = (rotY + rotX + rx) / denominator;
@@ -175,22 +141,20 @@ public class TeleOpV2 extends LinearOpMode {
             frontLeft.setPower(frontLeftPower);
             backLeft.setPower(backLeftPower);
             frontRight.setPower(frontRightPower);
-            backRight.setPower(backRightPower);
+            backRight.setPower(backRightPower);// turning
 
-   */
+
             if (gamepad2.left_bumper) {
                 if (posTimer.milliseconds() > 500) {
-                    if (pos == 90) {
-                        pos = 180;
+                    if (armPos == 90) {
+                        armPos = 180;
                     } else {
-                        pos = 90;
+                        armPos = 90;
                     }
-                    telemetry.addData("new pos: ", pos);
-                    telemetry.update();
-                    posTimer.reset();
                 }
             }
 
+            // claw toggle
             if ((gamepad1.a && !Constants.lastA)) {
                 Constants.direction = !Constants.direction;
                 if (!Constants.direction) {
@@ -203,6 +167,7 @@ public class TeleOpV2 extends LinearOpMode {
 
             Constants.lastA = gamepad1.a;
 
+
             // arm buttons
             if (gamepad2.a) {
                 arm.setPosition(Constants.armBackwardPos);
@@ -213,48 +178,32 @@ public class TeleOpV2 extends LinearOpMode {
             } else if (gamepad2.x) {
                 arm.setPosition(Constants.armAutonMedPos);
             }
-            // lift macros
+
+            int currentTicks = liftEncoder.getCurrentPosition();
+            double liftPower = coefficient * (targetTicks - currentTicks);
+            liftPower = Range.clip(liftPower, -0.6, 0.8);
+            lift1.setPower(liftPower);
+            lift2.setPower(liftPower);
+
             if (gamepad2.dpad_down) {
-                lift1.setTargetPosition(Constants.lowLift);
-                lift2.setTargetPosition(Constants.lowLift);
-                lift1.setPower(Constants.upSpeed);
-                lift2.setPower(Constants.upSpeed);
-                lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                liftActive = true;
-            } else if (gamepad2.dpad_left) {
-                lift1.setTargetPosition(Constants.mediumLift);
-                lift2.setTargetPosition(Constants.mediumLift);
-                lift1.setPower(Constants.upSpeed);
-                lift2.setPower(Constants.upSpeed);
-                lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                liftActive = true;
-                isMacro = true;
-            } else if (gamepad2.dpad_up) {
-                lift1.setTargetPosition(Constants.highLift);
-                lift2.setTargetPosition(Constants.highLift);
-                lift1.setPower(Constants.upSpeed);
-                lift2.setPower(Constants.upSpeed);
-                lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                liftActive = true;
-                isMacro = true;
-            } else if (gamepad2.dpad_right) {
-                liftTimer.reset();
-                ticks = 0;
-                arm.setPosition(Constants.armBackwardPos);
-                liftActive = true;
-                isMacro = false;
+                targetTicks = 20000;
             }
-            // endgame alert
-            if (endgameTimer.seconds() >= 85) {
-                gamepad1.rumble(500);
-                gamepad2.rumble(500);
+            if (gamepad2.dpad_left) {
+                targetTicks = 40000;
             }
-            telemetry.update();
-            telemetry.addData("motorPower", frontLeft.getPower());
-            telemetry.update();
+            if (gamepad2.dpad_up) {
+                targetTicks = 60000;
+            }
+            if (gamepad2.dpad_right) {
+                targetTicks = 0;
+            }
+
+            if (limitSwitch.isPressed()) {
+                if (limitTimer.milliseconds() > 300) {
+                    lift1.setPower(0);
+                    lift2.setPower(0);
+                }
+            }
         }
     }
 }
