@@ -172,6 +172,10 @@ public class TeleOpV1 extends LinearOpMode {
                 Thread.sleep(50);
             }
 
+            if (claw.getPosition() == 1) {
+
+            }
+
             // field centric:
 
            /* double botHeading = -imu.getAngularOrientation().firstAngle + 90;

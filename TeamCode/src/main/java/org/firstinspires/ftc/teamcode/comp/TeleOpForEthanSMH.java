@@ -1,5 +1,3 @@
-// with through-bore and limit switch
-
 package org.firstinspires.ftc.teamcode.comp;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
@@ -13,17 +11,16 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
+
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.util.Encoder;
 
 
 @TeleOp
-public class TeleOpV2 extends LinearOpMode {
-    ElapsedTime limitTimer = new ElapsedTime();
-    ElapsedTime endgameTimer = new ElapsedTime();
-    ElapsedTime posTimer = new ElapsedTime();
-
+public class TeleOpForEthanSMH extends LinearOpMode {
+    ElapsedTime bumperDelay = new ElapsedTime();
+    ElapsedTime clawWait = new ElapsedTime();
     ColorSensor colorSensor;
     TouchSensor limitSwitch;
     DistanceSensor distanceSensor;
@@ -33,15 +30,15 @@ public class TeleOpV2 extends LinearOpMode {
 
     double mult;
 
-    int armPos = 90;
-
     int targetTicks = 0; // will end up being VERY large (about the reciprocal of coefficient)
     double coefficient = 1.0 / (8192 * 2.5);
     // conversion from ticks to power has to be TINY, because you have 8192 ticks per revolution
 
-    double clawToggle;
     Servo claw, arm;
     BNO055IMU imu;
+
+    int count = 0; // counter for right_bumper clicks
+    boolean reset = true; // true means its going to zero, false means its going to a height
 
 
     @Override
@@ -79,8 +76,8 @@ public class TeleOpV2 extends LinearOpMode {
         frontLeft.setDirection(DcMotorEx.Direction.REVERSE);
         backLeft.setDirection(DcMotorEx.Direction.REVERSE);
 
-        lift1.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
-        lift2.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        lift1.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        lift2.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
         frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -139,69 +136,55 @@ public class TeleOpV2 extends LinearOpMode {
             frontLeft.setPower(frontLeftPower);
             backLeft.setPower(backLeftPower);
             frontRight.setPower(frontRightPower);
-            backRight.setPower(backRightPower);// turning
+            backRight.setPower(backRightPower);
 
-
-            if (gamepad2.left_bumper) {
-                if (posTimer.milliseconds() > 500) {
-                    if (armPos == 90) {
-                        armPos = 180;
+            if (gamepad1.right_bumper) {
+                if (bumperDelay.milliseconds() > 150) {
+                    count++;
+                    bumperDelay.reset();
+                    if (count % 3 == 1) {
+                        lift1.setTargetPosition(Constants.lowLift);
+                        lift2.setTargetPosition(Constants.lowLift);
+                    } else if (count % 3 == 2) {
+                        lift1.setTargetPosition(Constants.mediumLift);
+                        lift2.setTargetPosition(Constants.mediumLift);
                     } else {
-                        armPos = 90;
+                        lift1.setTargetPosition(Constants.highLift);
+                        lift2.setTargetPosition(Constants.highLift);
                     }
+                    arm.setPosition(Constants.armForwardPos);
+                }
+            }
+            if (gamepad1.left_bumper) {
+                int currentPos = (lift1.getCurrentPosition() + lift2.getCurrentPosition())/2;
+                if (bumperDelay.milliseconds() > 150) {
+                    count = 0;
+                    bumperDelay.reset();
+                    lift1.setTargetPosition(currentPos - 50);
+                    lift2.setTargetPosition(currentPos - 50);
+                    Thread.sleep(400); // yes this isn't async but im tired (jk i'll make it better later)
+                    claw.setPosition(0.4); // open
+                    lift1.setTargetPosition(currentPos);
+                    lift2.setTargetPosition(currentPos);
+                    Thread.sleep(400);
+                    arm.setPosition(Constants.armBackwardPos);
+                    Thread.sleep(200);
+                    lift1.setTargetPosition(0);
+                    lift2.setTargetPosition(0);
                 }
             }
 
-            // claw toggle
-            if ((gamepad1.a && !Constants.lastA)) {
-                Constants.direction = !Constants.direction;
-                if (!Constants.direction) {
-                    clawToggle = Constants.openClaw;
-                } else {
-                    clawToggle = Constants.closedClaw;
-                }
-                claw.setPosition(clawToggle);
+            if (lift1.getCurrentPosition() < 25) {
+                lift1.setPower(0);
+                lift2.setPower(0);
+            } else if (limitSwitch.isPressed()) {
+                lift1.setPower(0);
+                lift2.setPower(0);
+                lift1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                lift2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             }
 
-            Constants.lastA = gamepad1.a;
 
-
-            // arm buttons
-            if (gamepad2.a) {
-                arm.setPosition(Constants.armBackwardPos);
-            } else if (gamepad2.b) {
-                arm.setPosition(Constants.armSidewayPos);
-            } else if (gamepad2.y) {
-                arm.setPosition(Constants.armForwardPos);
-            } else if (gamepad2.x) {
-                arm.setPosition(Constants.armAutonMedPos);
-            }
-
-            int currentTicks = liftEncoder.getCurrentPosition();
-            double liftPower = coefficient * (targetTicks - currentTicks);
-            liftPower = Range.clip(liftPower, -0.6, 0.8);
-            lift1.setPower(liftPower);
-            lift2.setPower(liftPower);
-
-            if (gamepad2.dpad_down) {
-                targetTicks = 20000;
-            }
-            if (gamepad2.dpad_left) {
-                targetTicks = 40000;
-            }
-            if (gamepad2.dpad_up) {
-                targetTicks = 60000;
-            }
-            if (gamepad2.dpad_right) {
-                targetTicks = 0;
-            }
-
-            if (limitSwitch.isPressed()) {
-                if (limitTimer.milliseconds() > 300) {
-                    lift1.setPower(0);
-                    lift2.setPower(0);
-                }
-            }
         }
     }
 }
