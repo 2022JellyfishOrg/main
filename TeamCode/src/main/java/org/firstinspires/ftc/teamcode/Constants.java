@@ -29,7 +29,7 @@ public class Constants {
     public static final double armAutonMedPos = armBackwardPos - ((armBackwardPos - armSidewayPos)/2);
 
     // Side cones
-    public static int countCones = 5; // number of side cones (changes value)
+    public static int countCones = 4; // number of side cones (changes value)
     public static final double distancePerCone = 0.35; // distance in lift inches per side cone
     public static int sideConeLift = (int) (liftTicks * (1.5 + countCones * distancePerCone)); // calculation for lift height
 

@@ -14,7 +14,7 @@ public class MeepMeepTesting {
     public static double depositX = 33;
     public static double depositY = -14;
     public static double startAngle = Math.toRadians(0);
-    public static double depositAngle = Math.toRadians(0);
+    public static double depositAngle = Math.toRadians(-45);
     public static double loadAngle = Math.toRadians(0);
     public static double parkAngle = Math.toRadians(0);
     public static double loadX = 57;
@@ -28,11 +28,12 @@ public class MeepMeepTesting {
         RoadRunnerBotEntity myBot = new DefaultBotBuilder(meepMeep)
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
                 .setConstraints(58.3191798, 50, 4.6055, 4.6055, 12)
-                .setDimensions(14,17)
+                .setDimensions(14.5,18)
                 .followTrajectorySequence(drive ->
-                        drive.trajectorySequenceBuilder(new Pose2d(startPoseX, startPoseY, startAngle))
-                                .lineToLinearHeading(new Pose2d(depositX, depositY, depositAngle))
-                                .splineToLinearHeading(new Pose2d(loadX, loadY + 0.5, loadAngle), 0)
+                        drive.trajectorySequenceBuilder(new Pose2d(35.5, -61, 0))
+                                .lineToLinearHeading(new Pose2d(36, -20, 0))
+                                .lineToLinearHeading(new Pose2d(30.5, -10, Math.toRadians(-45)))
+                                .lineToLinearHeading(new Pose2d (56, -11, 0))
                                 .build()
 
 

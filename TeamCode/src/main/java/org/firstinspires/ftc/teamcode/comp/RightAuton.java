@@ -2,10 +2,9 @@ package org.firstinspires.ftc.teamcode.comp;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
+import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -13,33 +12,24 @@ import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.hackerstuff.AprilTagDetectionPipeline;
 import org.firstinspires.ftc.teamcode.hackerstuff.Detector;
-import org.openftc.apriltag.AprilTagDetection;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
-import org.openftc.easyopencv.OpenCvWebcam;
-
-import java.util.ArrayList;
 
 @Autonomous
 public class RightAuton extends LinearOpMode {
 
-    /* Declaring trajectories (toPreload and toDeposit are the same
-    for now just made two different trajectories for simplicity)
-     */
-    Trajectory toPreload;
+    Trajectory toPreload1;
+    Trajectory toPreload2;
     Trajectory toLoad;
     Trajectory toPark;
-    Trajectory toDeposit1;
-    Trajectory toDeposit2;
-    Trajectory toDeposit3;
+    Trajectory toDeposit;
+    TrajectoryBuilder toDepositInit;
     ElapsedTime timer = new ElapsedTime();
     OpenCvCamera webcam;
     int signalZonePos = 0;
     int offset = 0;
 
-
-    // Vision pipeline
     AprilTagDetectionPipeline aprilTagDetectionPipeline;
     int [] heights = {155, 125, 85, 28, 0};
 
@@ -66,111 +56,59 @@ public class RightAuton extends LinearOpMode {
             }
         });
 
-
-
-        waitForStart();
         signalZonePos = detector.getPosition();
         telemetry.addData("zone", signalZonePos);
         telemetry.update();
 
-        // Setting up trajectories and start position BEFORE starting
+        Pose2d startPose = new Pose2d(35.5, -61, 0);
 
-        // start position of robot (NEEDS TO BE ACCURATE TO ABOUT AN INCH OR LESS)
-        Pose2d startPose = new Pose2d(Constants.startPoseX, Constants.startPoseY, Constants.startAngle);
-
-        // setting robot "drive" position to the start position above
         drive.setPoseEstimate(startPose);
         int pos = (36 + (24 * (signalZonePos - 2)));
 
-        toPreload = drive.trajectoryBuilder(startPose)
-                .lineToLinearHeading(new Pose2d(Constants.depositX, Constants.depositY , Constants.depositAngle))
-                .addTemporalMarker(0.25, () -> drive.setArm(Constants.armAutonMedPos))
+        toPreload1 = drive.trajectoryBuilder(startPose)
+                .lineToLinearHeading(new Pose2d(36, -20, 0))
+                .addTemporalMarker(0.5, () -> drive.setArm(Constants.armForwardPos))
                 .build();
-        toLoad = drive.trajectoryBuilder(toPreload.end())
-                .lineToLinearHeading(new Pose2d(Constants.loadX, Constants.loadY-0.5, Constants.loadAngle))
+        toPreload2 = drive.trajectoryBuilder(toPreload1.end())
+                .lineToLinearHeading(new Pose2d(30.5, -13, Math.toRadians(-45)))
                 .build();
-        toDeposit1 = drive.trajectoryBuilder(toLoad.end())
-                .lineToLinearHeading(new Pose2d(Constants.depositX + 2.5, Constants.depositY, Constants.depositAngle))
-                .addTemporalMarker(0.25, () -> drive.setArm(Constants.armAutonMedPos))
+        toLoad = drive.trajectoryBuilder(toDeposit.end())
+                .lineToLinearHeading(new Pose2d(56, -12, 0))
+                .addTemporalMarker(0.5, () -> drive.setArm(Constants.armBackwardPos))
+                .addTemporalMarker(0.75, () -> drive.liftConfig("sideCones"))
                 .build();
-        toDeposit2 = drive.trajectoryBuilder(toLoad.end())
-                .lineToLinearHeading(new Pose2d(Constants.depositX + 2.5, Constants.depositY + 0.3, Constants.depositAngle))
-                .addTemporalMarker(0.25, () -> drive.setArm(Constants.armAutonMedPos))
+        toDeposit = drive.trajectoryBuilder(toLoad.end())
+                .lineToLinearHeading(new Pose2d(30.5, -13, Math.toRadians(-45)))
+                .addTemporalMarker(0.5, () -> drive.setArm(Constants.armForwardPos))
                 .build();
-        toDeposit3 = drive.trajectoryBuilder(toLoad.end())
-                .lineToLinearHeading(new Pose2d(Constants.depositX + 2.5, Constants.depositY + 0.7, Constants.depositAngle))
-                .addTemporalMarker(0.25, () -> drive.setArm(Constants.armAutonMedPos))
-                .build();
-        toPark = drive.trajectoryBuilder(toDeposit3.end())
-                .lineToLinearHeading(new Pose2d(pos, Constants.parkY, Constants.parkAngle))
+        toPark = drive.trajectoryBuilder(toDeposit.end())
+                .lineToLinearHeading(new Pose2d(pos, -10, 0))
+                .addTemporalMarker (0.25, () -> drive.setArm(Constants.armBackwardPos))
+                .addTemporalMarker (0.5, () -> drive.liftConfig("zero"))
                 .build();
 
-        // move lift to high (0 is reset, 1 is low, 2 is medium, 3 is high))
-        // ifCone represents if lift is picking up auton cone or depositing (true: auton cone, false: depositing)
+        waitForStart();
 
-        // rotate arm to back
-
-        drive.resetLifts();
-        // follow path to preload
         drive.clawClose();
-        Thread.sleep(1500);
-
-        /*drive.liftConfig(2, false);
-        telemetry.addData("countCones1", Constants.countCones);
-        telemetry.addData("ticks", SampleMecanumDrive.ticks);
-        telemetry.update();
-
-         */
-        drive.followTrajectory(toPreload);
-
-
-        // CYCLES FOR "cycles" amount of times
-        /*
-        for (int i = 0; i < Constants.cycles; i++) {
-
-            // open claw
-            Thread.sleep(1000);
-            drive.clawOpen();
-            Thread.sleep(250);
-
-            // reset lift to auton cone height
-            timer.reset();
-            drive.setArm(Constants.armBackwardPos);
-            drive.followTrajectory(toLoad);
-
-            drive.liftConfig(heights[i], true);
-            Thread.sleep(2000);
-            Constants.countCones--;
-            telemetry.addData("countCones2", Constants.countCones);
-            telemetry.addData("ticks", SampleMecanumDrive.ticks);
-            telemetry.update();
-
-            // grab cone
-            drive.clawClose();
-            Thread.sleep(500);
-
-            drive.liftConfig(2, false);
-
-            // drive to auton cones
-            if (i == 0) {
-                drive.followTrajectory(toDeposit1);
-            } else if (i == 1) {
-                drive.followTrajectory (toDeposit2);
-            } else if (i == 2) {
-                drive.followTrajectory(toDeposit3);
-            } else {
-                drive.followTrajectory(toDeposit3);
-            }
-
-
-
-            // moving cone up BEFORE following path
-
-            // Go back to deposit
-
-        }
-        */
+        sleep(2000);
+        drive.liftConfig("medium");
+        drive.followTrajectory(toPreload1);
+        drive.followTrajectory(toPreload2);
+        drive.liftDip();
+        drive.followTrajectory(toLoad);
+        drive.clawClose();
+        sleep(1000);
+        drive.liftConfig ("medium");
+        drive.followTrajectory(toDeposit);
+        sleep(1000);
+        drive.liftDip();
         drive.followTrajectory(toPark);
+
+
+
+
+
+
 
     }
 

@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
@@ -34,12 +35,11 @@ public class TeleOpForEthanSMH extends LinearOpMode {
     double coefficient = 1.0 / (8192 * 2.5);
     // conversion from ticks to power has to be TINY, because you have 8192 ticks per revolution
 
-    Servo claw, arm;
+    Servo claw, arm, servo;
     BNO055IMU imu;
 
     int count = 0; // counter for right_bumper clicks
     boolean reset = true; // true means its going to zero, false means its going to a height
-
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -143,14 +143,11 @@ public class TeleOpForEthanSMH extends LinearOpMode {
                     count++;
                     bumperDelay.reset();
                     if (count % 3 == 1) {
-                        lift1.setTargetPosition(Constants.lowLift);
-                        lift2.setTargetPosition(Constants.lowLift);
+                        liftGoPosition(Constants.lowLift);
                     } else if (count % 3 == 2) {
-                        lift1.setTargetPosition(Constants.mediumLift);
-                        lift2.setTargetPosition(Constants.mediumLift);
+                        liftGoPosition(Constants.mediumLift);
                     } else {
-                        lift1.setTargetPosition(Constants.highLift);
-                        lift2.setTargetPosition(Constants.highLift);
+                        liftGoPosition(Constants.highLift);
                     }
                     arm.setPosition(Constants.armForwardPos);
                 }
@@ -160,18 +157,17 @@ public class TeleOpForEthanSMH extends LinearOpMode {
                 if (bumperDelay.milliseconds() > 150) {
                     count = 0;
                     bumperDelay.reset();
-                    lift1.setTargetPosition(currentPos - 50);
-                    lift2.setTargetPosition(currentPos - 50);
+                    liftGoPosition(currentPos - 50);
                     Thread.sleep(400); // yes this isn't async but im tired (jk i'll make it better later)
                     claw.setPosition(0.4); // open
-                    lift1.setTargetPosition(currentPos);
-                    lift2.setTargetPosition(currentPos);
+                    liftGoPosition(currentPos);
                     Thread.sleep(400);
                     arm.setPosition(Constants.armBackwardPos);
                     Thread.sleep(200);
-                    lift1.setTargetPosition(0);
-                    lift2.setTargetPosition(0);
+                    liftGoPosition(0);
+
                 }
+
             }
 
             if (lift1.getCurrentPosition() < 25) {
@@ -184,8 +180,13 @@ public class TeleOpForEthanSMH extends LinearOpMode {
                 lift2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             }
 
-
         }
+    }
+    public void liftGoPosition(int ticks) {
+        lift1.setTargetPosition(ticks);
+        lift2.setTargetPosition(ticks);
+        lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 }
 

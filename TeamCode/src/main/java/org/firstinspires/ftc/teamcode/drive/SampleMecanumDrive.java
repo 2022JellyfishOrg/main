@@ -55,8 +55,7 @@ import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kV;
 @Config
 public class SampleMecanumDrive extends MecanumDrive {
 
-    public static int ticks = 0;
-
+    int [] heights = {155, 125, 85, 28, 0};
     public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(2.5, 0, 0);
     public static PIDCoefficients HEADING_PID = new PIDCoefficients(7, 0, 0);
 
@@ -190,48 +189,36 @@ public class SampleMecanumDrive extends MecanumDrive {
         lift1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         lift2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
-    public void liftConfig(int height, boolean ifCone) {
-
-        if (!ifCone) {
-            if (height == 3) {
-                ticks = Constants.highLift;
-                Constants.liftSpeed = 1;
-
-            } else if (height == 2)  {
-                ticks = Constants.mediumLift;
-                Constants.liftSpeed = 1;
-            } else if (height == 1) {
-                ticks = Constants.lowLift;
-                Constants.liftSpeed = 1;
-            } else if (height == 4) {
-                ticks = Constants.mediumLift;
-                Constants.liftSpeed = 1;
-            } else if (height == 5) {
-                ticks = Constants.mediumLift - 150;
-            } else if (height == 6) {
-                ticks = 25;
-            } else {
-                    ticks = 0;
-                    Constants.liftSpeed = 0.5;
-            }
-        } else {
-            if (Constants.distancePerCone > 0) {
-                ticks = height;
-                Constants.liftSpeed = 0.5;
-            } else {
-                ticks = 0;
-                Constants.liftSpeed = 0.5;
-            }
+    public void liftConfig(String height) {
+        if (height.equals("low")) {
+            liftToPosition(Constants.lowLift);
+        } else if (height.equals("medium")) {
+            liftToPosition(Constants.mediumLift);
+        } else if (height.equals("high")) {
+            liftToPosition(Constants.highLift);
+        } else if (height.equals("sideCone")) {
+            liftToPosition(heights[Constants.countCones]);
+        } else if (height.equals("zero")) {
+            liftToPosition(0);
         }
+    }
 
+    public void liftDip() throws InterruptedException {
+        int initialPos = (lift1.getCurrentPosition() + lift2.getCurrentPosition()) / 2;
+        liftToPosition(initialPos - 50);
+        Thread.sleep(300);
+        clawOpen();
+        liftToPosition(initialPos);
+        Thread.sleep(300);
+    }
+
+    public void liftToPosition (int ticks) {
         lift1.setTargetPosition(ticks);
         lift2.setTargetPosition(ticks);
         lift1.setPower(Constants.liftSpeed);
         lift2.setPower(Constants.liftSpeed);
         lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-
     }
 
    public void clawOpen() {
