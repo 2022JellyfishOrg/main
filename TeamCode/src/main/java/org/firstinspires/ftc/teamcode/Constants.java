@@ -18,14 +18,14 @@ public class Constants {
     public static double denominator = 0.15; // drive factor in tele
 
     // claw positions
-    public static final double openClaw = 0;
+    public static final double openClaw = 0.2;
     public static final double closedClaw = 1;
 
     // arm positions
     public static double offset = 0.03;
-    public static final double armForwardPos = 0.248 + offset;
-    public static final double armSidewayPos = 0.313 + offset;
-    public static final double armBackwardPos = 0.359 + offset;
+    public static final double armForwardPos = 0.33;
+    public static final double armSidewayPos = 0.635;
+    public static final double armBackwardPos = 0.94;
     public static final double armAutonMedPos = armBackwardPos - ((armBackwardPos - armSidewayPos)/2);
 
     // Side cones

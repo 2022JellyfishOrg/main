@@ -84,12 +84,15 @@ public class TeleOpV1 extends LinearOpMode {
 
         lift1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         lift2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lift1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lift2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         frontLeft.setDirection(DcMotor.Direction.REVERSE);
         backLeft.setDirection(DcMotor.Direction.REVERSE);
 
         lift1.setDirection(DcMotor.Direction.REVERSE);
         lift2.setDirection(DcMotor.Direction.REVERSE);
+        claw.setDirection(Servo.Direction.FORWARD);
 
 
         waitForStart();
@@ -99,17 +102,24 @@ public class TeleOpV1 extends LinearOpMode {
         liftTimer.reset();
 
         while (opModeIsActive()) {
-            telemetry.addData("red", colorSensor.red());
-            telemetry.addData("blue", colorSensor.blue());
-            telemetry.addData("limit switch", limitSwitch.isPressed());
-            telemetry.addData("distance sensor", distanceSensor.getDistance(DistanceUnit.INCH));
-            telemetry.update();
-            if (liftTimer.milliseconds() > 400 && liftActive) {
+            if (liftTimer.milliseconds() > 700 && liftActive) {
                 if (isMacro) {
                     if (pos == 90) {
-                        arm.setPosition(Constants.armSidewayPos);
+                        double pos = Constants.armSidewayPos;
+                        if (armPos < pos) {
+                            arm.setPosition(pos - 0.1);
+                            for (int i = 0; i < 10; i++) {
+                                arm.setPosition(arm.getPosition() + 0.01);
+                            }
+                            arm.setPosition(pos);
+                        }
                     } else {
-                        arm.setPosition(Constants.armForwardPos);
+                        double pos = Constants.armForwardPos;
+                        arm.setPosition(pos + 0.1);
+                        for (int i = 0; i < 10; i++) {
+                            arm.setPosition(arm.getPosition() - 0.01);
+                        }
+                        arm.setPosition(pos);
                     }
                 }
                 liftActive = false;
@@ -118,8 +128,8 @@ public class TeleOpV1 extends LinearOpMode {
                 if (!isMacro) {
                     lift1.setTargetPosition(ticks);
                     lift2.setTargetPosition(ticks);
-                    lift1.setPower(0.8);
-                    lift2.setPower(0.8);
+                    lift1.setPower(0.6);
+                    lift2.setPower(0.6);
                     lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 }
@@ -141,23 +151,26 @@ public class TeleOpV1 extends LinearOpMode {
             }
             double y = gamepad1.left_stick_y * Constants.denominator * mult;// Remember, this is reversed!
             double x = -gamepad1.left_stick_x * 1.1 * Constants.denominator * mult;// Counteract imperfect strafing
-            double rx = gamepad1.right_stick_x * Constants.denominator * mult; // turning
+            double rx = gamepad1.right_stick_x * Constants.denominator * mult;
 
-            double frontLeftPower = (y + x + rx);
-            double backLeftPower = (y - x + rx);
-            double frontRightPower = (y - x - rx);
-            double backRightPower = (y + x - rx);
+            double botHeading = -imu.getAngularOrientation().firstAngle;
 
+            double rotX = x * Math.cos(botHeading) - y * Math.sin(botHeading);
+            double rotY = x * Math.sin(botHeading) + y * Math.cos(botHeading);
+
+            // Denominator is the largest motor power (absolute value) or 1
+            // This ensures all the powers maintain the same ratio, but only when
+            // at least one is out of the range [-1, 1]
+            double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
+            double frontLeftPower = (rotY + rotX + rx) / denominator;
+            double backLeftPower = (rotY - rotX + rx) / denominator;
+            double frontRightPower = (rotY - rotX - rx) / denominator;
+            double backRightPower = (rotY + rotX - rx) / denominator;
 
             frontLeft.setPower(frontLeftPower);
             backLeft.setPower(backLeftPower);
             frontRight.setPower(frontRightPower);
-            backRight.setPower(backRightPower);
-
-            if (lift1.getCurrentPosition() <= 0 || lift2.getCurrentPosition() <= 0) {
-                lift1.setPower(0);
-                lift2.setPower(0);
-            }
+            backRight.setPower(backRightPower);// turning
             if (gamepad2.left_stick_y > 0 && lift1.getCurrentPosition() >= -50) {
                 lift1.setTargetPosition(lift1.getCurrentPosition() - 100);
                 lift2.setTargetPosition(lift2.getCurrentPosition() - 100);
@@ -170,10 +183,6 @@ public class TeleOpV1 extends LinearOpMode {
                 lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 Thread.sleep(50);
-            }
-
-            if (claw.getPosition() == 1) {
-
             }
 
             // field centric:
@@ -217,19 +226,44 @@ public class TeleOpV1 extends LinearOpMode {
                 }
                 claw.setPosition(clawToggle);
             }
-
             Constants.lastA = gamepad1.a;
 
-            // arm buttons
+            // go 0.1 away from target, make 10 iterations to final
+
+            double armPos = arm.getPosition();
             if (gamepad2.a) {
-                arm.setPosition(Constants.armBackwardPos);
+                double pos = Constants.armForwardPos;
+                arm.setPosition(pos + 0.1);
+                for (int i = 0; i < 10; i++) {
+                    arm.setPosition(arm.getPosition() - 0.01);
+                }
+                arm.setPosition(pos);
+
             } else if (gamepad2.b) {
-                arm.setPosition(Constants.armSidewayPos);
+                double pos = Constants.armSidewayPos;
+                if (armPos < pos) {
+                    arm.setPosition(pos - 0.1);
+                    for (int i = 0; i < 10; i++) {
+                        arm.setPosition(arm.getPosition() + 0.01);
+                    }
+                    arm.setPosition(pos);
+                } else {
+                    arm.setPosition(pos + 0.1);
+                    for (int i = 0; i < 10; i++) {
+                        arm.setPosition(arm.getPosition() - 0.01);
+                    }
+                    arm.setPosition(pos);
+                }
             } else if (gamepad2.y) {
-                arm.setPosition(Constants.armForwardPos);
-            } else if (gamepad2.x) {
-                arm.setPosition(Constants.armAutonMedPos);
+                double pos = Constants.armBackwardPos;
+                arm.setPosition(pos - 0.1);
+                for (int i = 0; i < 10; i++) {
+                    arm.setPosition(arm.getPosition() + 0.01);
+                }
+                arm.setPosition(pos);
             }
+            telemetry.addData("armPosition", arm.getPosition());
+            telemetry.update();
             // lift macros
             if (gamepad2.dpad_down) {
                 lift1.setTargetPosition(Constants.lowLift);
@@ -258,14 +292,27 @@ public class TeleOpV1 extends LinearOpMode {
                 liftActive = true;
                 isMacro = true;
             } else if (gamepad2.dpad_right) {
-                liftTimer.reset();
-                ticks = 0;
-                arm.setPosition(Constants.armBackwardPos);
-                liftActive = true;
-                isMacro = false;
+                double pos = Constants.armBackwardPos;
+                arm.setPosition(pos - 0.1);
+                for (int i = 0; i < 10; i++) {
+                    arm.setPosition(arm.getPosition() + 0.01);
+                }
+                arm.setPosition(pos);
             }
 
+            // allow for tolerance
+            if (limitSwitch.isPressed()) {
+                lift1.setPower(0);
+                lift2.setPower(0);
+                lift1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                lift2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+            }
+
+            telemetry.addData("liftPos", lift1.getCurrentPosition());
+            telemetry.update();
         }
+
     }
 }
 
