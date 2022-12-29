@@ -46,8 +46,8 @@ public class DriveConstants {
 
     // 48 = radius in mm -> divide by 25.4 for inches
     public static double WHEEL_RADIUS = 48 / 25.4; // in
-    public static double GEAR_RATIO = 5; // output (wheel) speed / input (motor) speed
-    public static double TRACK_WIDTH = 13; // in
+    public static double GEAR_RATIO = 1; // output (wheel) speed / input (motor) speed
+    public static double TRACK_WIDTH = 11; // in
 
     /*
      * These are the feedforward parameters used to model the drive motor behavior. If you are using
@@ -57,9 +57,9 @@ public class DriveConstants {
      */
 
     // suggested estimate vals
-    public static double kV =  0.0196;
-    public static double kA = 0.0053;
-    public static double kStatic = 0.0700;
+    public static double kV =  0.0143;
+    public static double kA = 0.0045;
+    public static double kStatic = 0.06;
 
     /*
      * These values are used to generate the trajectories for you robot. To ensure proper operation,
@@ -68,10 +68,10 @@ public class DriveConstants {
      * small and gradually increase them later after everything is working. All distance units are
      * inches.
      */
-    public static double MAX_VEL = 58.3191798;
-    public static double MAX_ACCEL = 50;
-    public static double MAX_ANG_VEL = 4.6055;
-    public static double MAX_ANG_ACCEL = 4.6055;
+    public static double MAX_VEL = 67.199;
+    public static double MAX_ACCEL = 67.199;
+    public static double MAX_ANG_VEL = 5.3;
+    public static double MAX_ANG_ACCEL = 5.3;
 
 
     public static double encoderTicksToInches(double ticks) {

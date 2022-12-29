@@ -59,7 +59,7 @@ public class SampleMecanumDrive extends MecanumDrive {
     public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(2.5, 0, 0);
     public static PIDCoefficients HEADING_PID = new PIDCoefficients(7, 0, 0);
 
-    public static double LATERAL_MULTIPLIER = 60.0/58.0;
+    public static double LATERAL_MULTIPLIER = 1;
 
     public static double VX_WEIGHT = 1;
     public static double VY_WEIGHT = 1;
@@ -73,6 +73,7 @@ public class SampleMecanumDrive extends MecanumDrive {
     private TrajectoryFollower follower;
 
     public DcMotorEx frontLeft, backLeft, backRight, frontRight, lift1, lift2;
+    public double clawToggle;
     public Servo claw, arm;
     private List<DcMotorEx> motors;
 
@@ -221,11 +222,69 @@ public class SampleMecanumDrive extends MecanumDrive {
         lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
+    public void resetLiftEncoders() {
+        lift1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        lift2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    }
+    public void turnOffLift() {
+        lift1.setPower(0);
+        lift2.setPower(0);
+    }
+
+    public void forwardArm() throws InterruptedException {
+        double pos = Constants.armForwardPos;
+        arm.setPosition(pos + 0.2);
+        for (int i = 0; i < 20; i++) {
+            arm.setPosition(arm.getPosition() - 0.01);
+            Thread.sleep(50);
+        }
+        arm.setPosition(pos);
+    }
+    public void sidewayArm() throws InterruptedException {
+        double pos = Constants.armSidewayPos;
+        if (arm.getPosition() < pos) {
+            arm.setPosition(pos - 0.2);
+            for (int i = 0; i < 20; i++) {
+                arm.setPosition(arm.getPosition() + 0.01);
+                Thread.sleep(50);
+            }
+        } else {
+            arm.setPosition(pos + 0.2);
+            for (int i = 0; i < 20; i++) {
+                arm.setPosition(arm.getPosition() - 0.01);
+            }
+        }
+        arm.setPosition(pos);
+    }
+    public void backwardArm() {
+        double pos = Constants.armBackwardPos;
+        arm.setPosition(pos - 0.2);
+        for (int i = 0; i < 20; i++) {
+            arm.setPosition(arm.getPosition() + 0.01);
+        }
+        arm.setPosition(pos);
+    }
+
    public void clawOpen() {
         claw.setPosition(Constants.openClaw);
     }
+
     public void clawClose() {
         claw.setPosition(Constants.closedClaw);
+    }
+
+    public void clawToggle() {
+        Constants.direction = !Constants.direction;
+        if (!Constants.direction) {
+            clawToggle = Constants.openClaw;
+        } else {
+            clawToggle = Constants.closedClaw;
+        }
+        claw.setPosition(clawToggle);
+    }
+
+    public int getLiftPos() {
+        return (lift1.getCurrentPosition() + lift2.getCurrentPosition())/2;
     }
 
     public void setArm(double position) {
@@ -350,10 +409,11 @@ public class SampleMecanumDrive extends MecanumDrive {
 
     @Override
     public void setMotorPowers(double v, double v1, double v2, double v3) {
-        frontLeft.setPower(v);
-        backLeft.setPower(v1);
-        backRight.setPower(v2);
-        frontRight.setPower(v3);
+        double multiplier = 13 / batteryVoltageSensor.getVoltage();
+        frontLeft.setPower(v * multiplier);
+        backLeft.setPower(v1 * multiplier);
+        backRight.setPower(v2 * multiplier);
+        frontRight.setPower(v3 * multiplier);
     }
 
     @Override

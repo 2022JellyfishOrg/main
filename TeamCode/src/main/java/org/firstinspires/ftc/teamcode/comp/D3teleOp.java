@@ -5,20 +5,15 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
-
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Constants;
 
-import java.util.Timer;
-
 @TeleOp
-public class TeleOpV1 extends LinearOpMode {
+public class D3teleOp extends LinearOpMode {
     ElapsedTime endgameTimer = new ElapsedTime();
     ElapsedTime liftTimer = new ElapsedTime();
     ElapsedTime isToggled = new ElapsedTime();
@@ -107,8 +102,8 @@ public class TeleOpV1 extends LinearOpMode {
                     if (pos == 90) {
                         double pos = Constants.armSidewayPos;
                         if (armPos < pos) {
-                            arm.setPosition(pos - 0.1);
-                            for (int i = 0; i < 10; i++) {
+                            arm.setPosition(pos - 0.2);
+                            for (int i = 0; i < 20; i++) {
                                 arm.setPosition(arm.getPosition() + 0.01);
                             }
                             arm.setPosition(pos);
@@ -116,7 +111,7 @@ public class TeleOpV1 extends LinearOpMode {
                     } else {
                         double pos = Constants.armForwardPos;
                         arm.setPosition(pos + 0.1);
-                        for (int i = 0; i < 10; i++) {
+                        for (int i = 0; i < 20; i++) {
                             arm.setPosition(arm.getPosition() - 0.01);
                         }
                         arm.setPosition(pos);
@@ -233,8 +228,8 @@ public class TeleOpV1 extends LinearOpMode {
             double armPos = arm.getPosition();
             if (gamepad2.a) {
                 double pos = Constants.armForwardPos;
-                arm.setPosition(pos + 0.1);
-                for (int i = 0; i < 10; i++) {
+                arm.setPosition(pos + 0.2);
+                for (int i = 0; i < 20; i++) {
                     arm.setPosition(arm.getPosition() - 0.01);
                 }
                 arm.setPosition(pos);
@@ -242,22 +237,22 @@ public class TeleOpV1 extends LinearOpMode {
             } else if (gamepad2.b) {
                 double pos = Constants.armSidewayPos;
                 if (armPos < pos) {
-                    arm.setPosition(pos - 0.1);
-                    for (int i = 0; i < 10; i++) {
+                    arm.setPosition(pos - 0.2);
+                    for (int i = 0; i < 20; i++) {
                         arm.setPosition(arm.getPosition() + 0.01);
                     }
                     arm.setPosition(pos);
                 } else {
-                    arm.setPosition(pos + 0.1);
-                    for (int i = 0; i < 10; i++) {
+                    arm.setPosition(pos + 0.2);
+                    for (int i = 0; i < 20; i++) {
                         arm.setPosition(arm.getPosition() - 0.01);
                     }
                     arm.setPosition(pos);
                 }
             } else if (gamepad2.y) {
                 double pos = Constants.armBackwardPos;
-                arm.setPosition(pos - 0.1);
-                for (int i = 0; i < 10; i++) {
+                arm.setPosition(pos - 0.2);
+                for (int i = 0; i < 20; i++) {
                     arm.setPosition(arm.getPosition() + 0.01);
                 }
                 arm.setPosition(pos);
@@ -293,11 +288,17 @@ public class TeleOpV1 extends LinearOpMode {
                 isMacro = true;
             } else if (gamepad2.dpad_right) {
                 double pos = Constants.armBackwardPos;
-                arm.setPosition(pos - 0.1);
-                for (int i = 0; i < 10; i++) {
+                arm.setPosition(pos - 0.2);
+                for (int i = 0; i < 20; i++) {
                     arm.setPosition(arm.getPosition() + 0.01);
                 }
                 arm.setPosition(pos);
+                lift1.setTargetPosition(0);
+                lift2.setTargetPosition(0);
+                lift1.setPower(Constants.upSpeed);
+                lift2.setPower(Constants.upSpeed);
+                lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             }
 
             // allow for tolerance

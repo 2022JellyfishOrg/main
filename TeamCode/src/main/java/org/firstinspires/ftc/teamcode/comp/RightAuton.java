@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.comp;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -28,7 +29,7 @@ public class RightAuton extends LinearOpMode {
     TrajectoryBuilder toDepositInit;
     ElapsedTime timer = new ElapsedTime();
     OpenCvCamera webcam;
-    int signalZonePos = 0;
+    int signalZonePos = 2;
     int offset = 0;
 
     AprilTagDetectionPipeline aprilTagDetectionPipeline;
@@ -62,18 +63,19 @@ public class RightAuton extends LinearOpMode {
         telemetry.update();
 
         Pose2d startPose = new Pose2d(35.5, -61, 0);
+        Pose2d depositPose = new Pose2d(30.5, -13, Math.toRadians(-45));
 
         drive.setPoseEstimate(startPose);
         int pos = (36 + (24 * (signalZonePos - 2)));
 
         toPreload1 = drive.trajectoryBuilder(startPose)
-                .lineToLinearHeading(new Pose2d(36, -20, 0))
+                .lineTo(new Vector2d(39, -18))
                 .addTemporalMarker(0.5, () -> drive.setArm(Constants.armForwardPos))
                 .build();
         toPreload2 = drive.trajectoryBuilder(toPreload1.end())
-                .lineToLinearHeading(new Pose2d(30.5, -13, Math.toRadians(-45)))
+                .lineToLinearHeading(new Pose2d(30.5, -10, Math.toRadians(-45)))
                 .build();
-        toLoad = drive.trajectoryBuilder(toDeposit.end())
+        toLoad = drive.trajectoryBuilder(depositPose)
                 .lineToLinearHeading(new Pose2d(56, -12, 0))
                 .addTemporalMarker(0.5, () -> drive.setArm(Constants.armBackwardPos))
                 .addTemporalMarker(0.75, () -> drive.liftConfig("sideCones"))
@@ -92,17 +94,20 @@ public class RightAuton extends LinearOpMode {
 
         drive.clawClose();
         sleep(2000);
-        drive.liftConfig("medium");
+        drive.liftConfig("high");
         drive.followTrajectory(toPreload1);
         drive.followTrajectory(toPreload2);
         drive.liftDip();
-        drive.followTrajectory(toLoad);
+        sleep(2000);
+        /* drive.followTrajectory(toLoad);
         drive.clawClose();
         sleep(1000);
         drive.liftConfig ("medium");
         drive.followTrajectory(toDeposit);
         sleep(1000);
         drive.liftDip();
+
+         */
         drive.followTrajectory(toPark);
 
 
