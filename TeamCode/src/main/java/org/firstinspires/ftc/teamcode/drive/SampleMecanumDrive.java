@@ -74,6 +74,7 @@ public class SampleMecanumDrive extends MecanumDrive {
 
     public DcMotorEx frontLeft, backLeft, backRight, frontRight, lift1, lift2;
     public double clawToggle;
+    public int counter = 0;
     public Servo claw, arm;
     private List<DcMotorEx> motors;
 
@@ -289,6 +290,20 @@ public class SampleMecanumDrive extends MecanumDrive {
 
     public void setArm(double position) {
         arm.setPosition(position);
+    }
+
+    public int D3RightBumper() {
+        if (counter % 3 == 0) {
+            return Constants.highLift;
+        } else if (counter % 3 == 1) {
+            return Constants.lowLift;
+        } else {
+            return Constants.mediumLift;
+        }
+    }
+
+    public int getCounter() {
+        return counter;
     }
 
     public void turnAsync(double angle) {
