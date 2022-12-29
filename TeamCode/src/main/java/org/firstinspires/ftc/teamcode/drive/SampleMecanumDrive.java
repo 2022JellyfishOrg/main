@@ -205,13 +205,13 @@ public class SampleMecanumDrive extends MecanumDrive {
         }
     }
 
-    public void liftDip() throws InterruptedException {
+    public void liftDip(int sleep) throws InterruptedException {
         int initialPos = (lift1.getCurrentPosition() + lift2.getCurrentPosition()) / 2;
         liftToPosition(initialPos - 50);
-        Thread.sleep(300);
+        Thread.sleep(sleep);
         clawOpen();
         liftToPosition(initialPos);
-        Thread.sleep(300);
+        Thread.sleep(sleep);
     }
 
     public void liftToPosition (int ticks) {

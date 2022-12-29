@@ -78,6 +78,10 @@ public class D3teleOp extends LinearOpMode {
             }
             Constants.lastA = gamepad1.a;
 
+            if (gamepad1.y) {
+                drive.liftDip(200);
+            }
+
 
             telemetry.addData("x", poseEstimate.getX());
             telemetry.addData("y", poseEstimate.getY());
