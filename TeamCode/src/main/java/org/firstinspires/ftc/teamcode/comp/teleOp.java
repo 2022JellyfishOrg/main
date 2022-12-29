@@ -21,6 +21,7 @@ public class teleOp extends LinearOpMode {
     ElapsedTime liftTimer = new ElapsedTime();
     ElapsedTime posTimer = new ElapsedTime();
     TouchSensor limitSwitch;
+    int mult;
     int pos = 90;
     boolean liftActive = false;
     boolean isMacro = true;
@@ -33,13 +34,22 @@ public class teleOp extends LinearOpMode {
         waitForStart();
         if (isStopRequested()) return;
         while (opModeIsActive() && !isStopRequested()) {
+            if (gamepad1.right_trigger == 0) {
+                mult = 1;
+            } else if (gamepad1.right_trigger <= 0.4 && gamepad1.right_trigger > 0) {
+                mult = 2;
+            } else if (gamepad1.right_trigger <= 0.8 && gamepad1.right_trigger > 0.4) {
+                mult = 3;
+            } else {
+                mult = 4;
+            }
             Pose2d poseEstimate = drive.getPoseEstimate();
 
             // Create a vector from the gamepad x/y inputs
             // Then, rotate that vector by the inverse of that heading
             Vector2d input = new Vector2d(
-                    -gamepad1.left_stick_y,
-                    -gamepad1.left_stick_x
+                    -gamepad1.left_stick_y * mult,
+                    -gamepad1.left_stick_x * mult
             ).rotated(-poseEstimate.getHeading());
 
             // Pass in the rotated input + right stick value for rotation
@@ -48,7 +58,7 @@ public class teleOp extends LinearOpMode {
                     new Pose2d(
                             input.getX(),
                             input.getY(),
-                            -gamepad1.right_stick_x
+                            -gamepad1.right_stick_x * mult
                     )
             );
 
