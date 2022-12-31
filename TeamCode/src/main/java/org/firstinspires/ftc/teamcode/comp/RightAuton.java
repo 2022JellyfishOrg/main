@@ -33,7 +33,7 @@ public class RightAuton extends LinearOpMode {
     int offset = 0;
 
     AprilTagDetectionPipeline aprilTagDetectionPipeline;
-    int [] heights = {155, 125, 85, 28, 0};
+    int [] heights = {180, 140, 100, 50, 10};
 
 
     @Override
@@ -63,25 +63,23 @@ public class RightAuton extends LinearOpMode {
         telemetry.update();
 
         Pose2d startPose = new Pose2d(35.5, -61, 0);
-        Pose2d depositPose = new Pose2d(30.5, -13, Math.toRadians(-45));
+        Pose2d depositPose = new Pose2d(31.5, -9.5, Math.toRadians(-60));
 
         drive.setPoseEstimate(startPose);
         int pos = (36 + (24 * (signalZonePos - 2)));
 
         toPreload1 = drive.trajectoryBuilder(startPose)
-                .lineTo(new Vector2d(39, -18))
+                .lineTo(new Vector2d(37, -18))
                 .addTemporalMarker(0.5, () -> drive.setArm(Constants.armForwardPos))
                 .build();
         toPreload2 = drive.trajectoryBuilder(toPreload1.end())
-                .lineToLinearHeading(new Pose2d(30.5, -10, Math.toRadians(-45)))
+                .lineToLinearHeading(depositPose)
                 .build();
         toLoad = drive.trajectoryBuilder(depositPose)
-                .lineToLinearHeading(new Pose2d(56, -12, 0))
-                .addTemporalMarker(0.5, () -> drive.setArm(Constants.armBackwardPos))
-                .addTemporalMarker(0.75, () -> drive.liftConfig("sideCones"))
+                .lineToLinearHeading(new Pose2d(54.8, -9, 0))
                 .build();
         toDeposit = drive.trajectoryBuilder(toLoad.end())
-                .lineToLinearHeading(new Pose2d(30.5, -13, Math.toRadians(-45)))
+                .lineToLinearHeading(depositPose)
                 .addTemporalMarker(0.5, () -> drive.setArm(Constants.armForwardPos))
                 .build();
         toPark = drive.trajectoryBuilder(toDeposit.end())
@@ -91,24 +89,32 @@ public class RightAuton extends LinearOpMode {
                 .build();
 
         waitForStart();
-
+        drive.resetLiftEncoders();
         drive.clawClose();
-        sleep(2000);
+        sleep(1500);
         drive.liftConfig("high");
         drive.followTrajectory(toPreload1);
         drive.followTrajectory(toPreload2);
-        drive.liftDip();
-        sleep(2000);
-        /* drive.followTrajectory(toLoad);
-        drive.clawClose();
+        for (int i = 0; i < 2; i++) {
+            sleep(200);
+            drive.liftDip(400);
+            drive.setArm(Constants.armBackwardPos);
+            sleep(1500);
+            drive.liftConfig("sideCone");
+            sleep(200);
+            drive.followTrajectory(toLoad);
+            drive.clawClose();
+            sleep(500);
+            drive.liftConfig ("high");
+            sleep(350);
+            drive.followTrajectory(toDeposit);
+            sleep(1000);
+            drive.liftDip(400);
+        }
+        drive.backwardArm();
         sleep(1000);
-        drive.liftConfig ("medium");
-        drive.followTrajectory(toDeposit);
-        sleep(1000);
-        drive.liftDip();
 
-         */
-        drive.followTrajectory(toPark);
+        // drive.followTrajectory(toPark);
 
 
 

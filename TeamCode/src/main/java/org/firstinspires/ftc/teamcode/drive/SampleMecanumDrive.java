@@ -26,7 +26,9 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceBuilder;
@@ -55,9 +57,10 @@ import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kV;
 @Config
 public class SampleMecanumDrive extends MecanumDrive {
 
-    int [] heights = {155, 125, 85, 28, 0};
+    public static int [] heights = {155, 125, 85, 28, 0};
     public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(9, 0, 1);
     public static PIDCoefficients HEADING_PID = new PIDCoefficients(7, 0, 1);
+    Telemetry telemetry;
 
     public static double LATERAL_MULTIPLIER = 1;
 
@@ -155,8 +158,8 @@ public class SampleMecanumDrive extends MecanumDrive {
         }
 
         // TODO: reverse any motors using DcMotor.setDirection()
-        frontLeft.setDirection(DcMotor.Direction.REVERSE);
-        backLeft.setDirection(DcMotor.Direction.REVERSE);
+        frontRight.setDirection(DcMotor.Direction.REVERSE);
+        backRight.setDirection(DcMotor.Direction.REVERSE);
         lift1.setDirection(DcMotor.Direction.REVERSE);
         lift2.setDirection(DcMotor.Direction.REVERSE);
 
@@ -199,7 +202,7 @@ public class SampleMecanumDrive extends MecanumDrive {
         } else if (height.equals("high")) {
             liftToPosition(Constants.highLift);
         } else if (height.equals("sideCone")) {
-            liftToPosition(heights[Constants.countCones]);
+            liftToPosition(heights[heights.length - 1 - Constants.countCones]);
         } else if (height.equals("zero")) {
             liftToPosition(0);
         }
@@ -207,7 +210,7 @@ public class SampleMecanumDrive extends MecanumDrive {
 
     public void liftDip(int sleep) throws InterruptedException {
         int initialPos = (lift1.getCurrentPosition() + lift2.getCurrentPosition()) / 2;
-        liftToPosition(initialPos - 50);
+        liftToPosition(initialPos - 125);
         Thread.sleep(sleep);
         clawOpen();
         liftToPosition(initialPos);
@@ -215,6 +218,9 @@ public class SampleMecanumDrive extends MecanumDrive {
     }
 
     public void liftToPosition (int ticks) {
+        if (ticks == 0) {
+            Constants.liftSpeed = 0.55;
+        }
         lift1.setTargetPosition(ticks);
         lift2.setTargetPosition(ticks);
         lift1.setPower(Constants.liftSpeed);
@@ -233,37 +239,55 @@ public class SampleMecanumDrive extends MecanumDrive {
     }
 
     public void forwardArm() throws InterruptedException {
+        /*
         double pos = Constants.armForwardPos;
-        arm.setPosition(pos + 0.2);
-        for (int i = 0; i < 20; i++) {
-            arm.setPosition(arm.getPosition() - 0.01);
-            Thread.sleep(50);
-        }
-        arm.setPosition(pos);
-    }
-    public void sidewayArm() throws InterruptedException {
-        double pos = Constants.armSidewayPos;
-        if (arm.getPosition() < pos) {
-            arm.setPosition(pos - 0.2);
-            for (int i = 0; i < 20; i++) {
-                arm.setPosition(arm.getPosition() + 0.01);
-                Thread.sleep(50);
-            }
-        } else {
+        if (Math.abs(arm.getPosition() - pos) > 0) {
             arm.setPosition(pos + 0.2);
             for (int i = 0; i < 20; i++) {
                 arm.setPosition(arm.getPosition() - 0.01);
+                Thread.sleep(50);
             }
+            arm.setPosition(pos);
         }
-        arm.setPosition(pos);
+
+         */
+        arm.setPosition(Constants.armForwardPos);
+    }
+    public void sidewayArm() throws InterruptedException {
+        /*
+        double pos = Constants.armSidewayPos;
+        if (Math.abs(arm.getPosition() - pos) > 0) {
+            if (arm.getPosition() < pos) {
+                arm.setPosition(pos - 0.2);
+                for (int i = 0; i < 20; i++) {
+                    arm.setPosition(arm.getPosition() + 0.01);
+                    Thread.sleep(50);
+                }
+            } else {
+                arm.setPosition(pos + 0.2);
+                for (int i = 0; i < 20; i++) {
+                    arm.setPosition(arm.getPosition() - 0.01);
+                }
+            }
+            arm.setPosition(pos);
+        }
+
+         */
+        arm.setPosition(Constants.armSidewayPos);
     }
     public void backwardArm() {
+        /*
         double pos = Constants.armBackwardPos;
-        arm.setPosition(pos - 0.2);
-        for (int i = 0; i < 20; i++) {
-            arm.setPosition(arm.getPosition() + 0.01);
+        if (Math.abs(arm.getPosition() - pos) > 0) {
+            arm.setPosition(pos - 0.2);
+            for (int i = 0; i < 20; i++) {
+                arm.setPosition(arm.getPosition() + 0.01);
+            }
+            arm.setPosition(pos);
         }
-        arm.setPosition(pos);
+
+         */
+        arm.setPosition(Constants.armBackwardPos);
     }
 
    public void clawOpen() {
@@ -302,9 +326,6 @@ public class SampleMecanumDrive extends MecanumDrive {
         }
     }
 
-    public int getCounter() {
-        return counter;
-    }
 
     public void turnAsync(double angle) {
         trajectorySequenceRunner.followTrajectorySequenceAsync(
@@ -424,7 +445,7 @@ public class SampleMecanumDrive extends MecanumDrive {
 
     @Override
     public void setMotorPowers(double v, double v1, double v2, double v3) {
-        double multiplier = 13 / batteryVoltageSensor.getVoltage();
+        double multiplier = 1;
         frontLeft.setPower(v * multiplier);
         backLeft.setPower(v1 * multiplier);
         backRight.setPower(v2 * multiplier);

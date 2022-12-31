@@ -23,7 +23,7 @@ public class Constants {
 
     // arm positions
     public static double offset = 0.03;
-    public static final double armForwardPos = 0.33;
+    public static final double armForwardPos = 0.31;
     public static final double armSidewayPos = 0.635;
     public static final double armBackwardPos = 0.94;
     public static final double armAutonMedPos = armBackwardPos - ((armBackwardPos - armSidewayPos)/2);

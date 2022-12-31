@@ -126,10 +126,6 @@ public class teleOp extends LinearOpMode {
             } else if (gamepad2.y) {
                 drive.backwardArm();
             }
-            if (limitSwitch.isPressed()) {
-                drive.turnOffLift();
-                drive.resetLiftEncoders();
-            }
             telemetry.addData("x", poseEstimate.getX());
             telemetry.addData("y", poseEstimate.getY());
             telemetry.addData("heading", poseEstimate.getHeading());
