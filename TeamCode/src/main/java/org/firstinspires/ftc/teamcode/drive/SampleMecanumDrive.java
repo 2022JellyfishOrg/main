@@ -219,7 +219,7 @@ public class SampleMecanumDrive extends MecanumDrive {
         liftToPosition(initialPos - 125);
         Thread.sleep(sleep);
         clawOpen();
-        liftToPosition(initialPos + 75);
+        liftToPosition(initialPos + 150);
         Thread.sleep(sleep + 200);
     }
 
@@ -326,6 +326,11 @@ public class SampleMecanumDrive extends MecanumDrive {
         }
     }
 
+    public void resetAllTimers(ElapsedTime[] timers) {
+        for (int i = 0; i < timers.length; i++) {
+            timers[i].reset();
+        }
+    }
 
     public void turnAsync(double angle) {
         trajectorySequenceRunner.followTrajectorySequenceAsync(

@@ -9,7 +9,7 @@ import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
 @TeleOp
-public class AutonLiftTest extends LinearOpMode {
+public class liftTest extends LinearOpMode {
     DcMotor lift1;
     DcMotor lift2;
     Servo claw;
@@ -54,9 +54,6 @@ public class AutonLiftTest extends LinearOpMode {
                 int liftPos = drive.getLiftPos();
                 drive.liftToPosition(liftPos - 20);
                 sleep(50);
-            }
-            if ((gamepad1.y && !Constants.lastA)) {
-                drive.clawToggle();
             }
             Constants.lastA = gamepad1.y;
             telemetry.addData("lift1Pos", lift1.getCurrentPosition());
