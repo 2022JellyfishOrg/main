@@ -25,7 +25,8 @@ public class Constants {
     public static double offset = 0.03;
     public static final double armForwardPos = 0.31;
     public static final double armSidewayPos = 0.635;
-    public static final double armBackwardPos = 0.94;
+    public static final double armPrevBackPos = 0.7825;
+    public static final double armBackwardPos = 0.93;
     public static final double armAutonMedPos = armBackwardPos - ((armBackwardPos - armSidewayPos)/2);
 
     // Side cones
@@ -45,10 +46,10 @@ public class Constants {
 
     // Lift heights
     public static final int inspectionLift = 300;
-    public static final int lowLift = 529;
-    public static final int mediumLift = 780;
+    public static final int lowLift = 495;
+    public static final int mediumLift = 775;
     public static final int sevenInches = 300;
-    public static final int highLift = 1140;
+    public static final int highLift = 1120;
     public static double liftSpeed = 0.8;
     public static double upSpeed = 0.9;
     public static double downSpeed = 0.5;

@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.Constants;
+import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
 @TeleOp
 public class AutonLiftTest extends LinearOpMode {
@@ -15,6 +16,7 @@ public class AutonLiftTest extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
+        SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
         lift1 = hardwareMap.dcMotor.get("lift1");
         lift2 = hardwareMap.dcMotor.get("lift2");
         claw = hardwareMap.servo.get("claw");
@@ -44,28 +46,19 @@ public class AutonLiftTest extends LinearOpMode {
             Constants.lastA = gamepad1.a;
 
             if (gamepad1.a) {
-                lift1.setPower(0.8);
-                lift2.setPower(0.8);
-                lift1.setTargetPosition(lift1.getCurrentPosition() + 30);
-                lift2.setTargetPosition(lift2.getCurrentPosition() + 30);
-                lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                int liftPos = drive.getLiftPos();
+                drive.liftToPosition(liftPos + 20);
                 sleep(50);
 
             } else if (gamepad1.b) {
-                lift1.setPower(0.8);
-                lift2.setPower(0.8);
-                lift1.setTargetPosition(lift1.getCurrentPosition() - 30);
-                lift2.setTargetPosition(lift2.getCurrentPosition() - 30);
-                lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                int liftPos = drive.getLiftPos();
+                drive.liftToPosition(liftPos - 20);
                 sleep(50);
-            } else {
-                lift1.setTargetPosition(lift1.getCurrentPosition());
-                lift2.setTargetPosition(lift2.getCurrentPosition());
-                lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             }
+            if ((gamepad1.y && !Constants.lastA)) {
+                drive.clawToggle();
+            }
+            Constants.lastA = gamepad1.y;
             telemetry.addData("lift1Pos", lift1.getCurrentPosition());
             telemetry.addData("lift2Pos", lift2.getCurrentPosition());
             telemetry.update();

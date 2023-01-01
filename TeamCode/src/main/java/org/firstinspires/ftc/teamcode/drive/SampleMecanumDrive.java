@@ -57,7 +57,7 @@ import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kV;
 @Config
 public class SampleMecanumDrive extends MecanumDrive {
 
-    public static int [] heights = {155, 125, 85, 28, 0};
+    public static int [] heights = {200, 150, 100, 66, 0};
     public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(9, 0, 1);
     public static PIDCoefficients HEADING_PID = new PIDCoefficients(7, 0, 1);
     Telemetry telemetry;
@@ -208,13 +208,19 @@ public class SampleMecanumDrive extends MecanumDrive {
         }
     }
 
+    public void turnManual() {
+        frontLeft.setPower(0.8);
+        frontRight.setPower(0.8);
+        backLeft.setPower(-0.8);
+        backRight.setPower(-0.8);
+    }
     public void liftDip(int sleep) throws InterruptedException {
         int initialPos = (lift1.getCurrentPosition() + lift2.getCurrentPosition()) / 2;
         liftToPosition(initialPos - 125);
         Thread.sleep(sleep);
         clawOpen();
-        liftToPosition(initialPos);
-        Thread.sleep(sleep);
+        liftToPosition(initialPos + 75);
+        Thread.sleep(sleep + 200);
     }
 
     public void liftToPosition (int ticks) {
@@ -252,6 +258,9 @@ public class SampleMecanumDrive extends MecanumDrive {
 
          */
         arm.setPosition(Constants.armForwardPos);
+    }
+    public void prevBackArm() throws InterruptedException {
+        arm.setPosition(Constants.armPrevBackPos);
     }
     public void sidewayArm() throws InterruptedException {
         /*
@@ -298,15 +307,6 @@ public class SampleMecanumDrive extends MecanumDrive {
         claw.setPosition(Constants.closedClaw);
     }
 
-    public void clawToggle() {
-        Constants.direction = !Constants.direction;
-        if (!Constants.direction) {
-            clawToggle = Constants.openClaw;
-        } else {
-            clawToggle = Constants.closedClaw;
-        }
-        claw.setPosition(clawToggle);
-    }
 
     public int getLiftPos() {
         return (lift1.getCurrentPosition() + lift2.getCurrentPosition())/2;
