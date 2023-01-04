@@ -10,16 +10,15 @@ public class Constants {
      */
 
     // claw positions
-    public static final double openClaw = 0.2;
+    public static final double openClaw = 0.27;
     public static final double closedClaw = 1;
 
     // arm positions
-    public static double offset = 0.03;
     public static final double armForwardPos = 0.31;
-    public static final double armSidewayPos = 0.635;
-    public static final double armPrevBackPos = 0.7825;
-    public static final double armBackwardPos = 0.93;
-    public static final double armAutonMedPos = armBackwardPos - ((armBackwardPos - armSidewayPos)/2);
+    public static final double arm145ANGLE = 0.55;
+    public static final double armSidewayPos = 0.695;
+    public static final double armPrevBackPos = 0.9;
+    public static final double armBackwardPos = 0.975;
 
     // Side cones
     public static int countCones = 4; // number of side cones (changes value)
@@ -29,9 +28,11 @@ public class Constants {
     public static boolean direction = true;
 
     // Lift heights
-    public static final int lowLift = 495;
-    public static final int mediumLift = 775;
-    public static final int highLift = 1120;
+
+    public static final double factor = 13.03/18.88;
+    public static final int lowLift = (int)(1106 * factor);
+    public static final int mediumLift = (int)(1746 * factor);
+    public static final int highLift = 1700;
     public static double liftSpeed = 0.8;
 
 }

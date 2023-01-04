@@ -58,6 +58,8 @@ import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kV;
 public class SampleMecanumDrive extends MecanumDrive {
 
     public static int [] heights = {200, 150, 100, 66, 0};
+
+
     public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(9, 0, 1);
     public static PIDCoefficients HEADING_PID = new PIDCoefficients(7, 0, 1);
     Telemetry telemetry;
@@ -158,8 +160,8 @@ public class SampleMecanumDrive extends MecanumDrive {
         }
 
         // TODO: reverse any motors using DcMotor.setDirection()
-        frontRight.setDirection(DcMotor.Direction.REVERSE);
-        backRight.setDirection(DcMotor.Direction.REVERSE);
+        frontLeft.setDirection(DcMotor.Direction.REVERSE);
+        backLeft.setDirection(DcMotor.Direction.REVERSE);
         lift1.setDirection(DcMotor.Direction.REVERSE);
         lift2.setDirection(DcMotor.Direction.REVERSE);
 
@@ -215,17 +217,28 @@ public class SampleMecanumDrive extends MecanumDrive {
         backRight.setPower(-0.8);
     }
     public void liftDip(int sleep) throws InterruptedException {
+        double temp = Constants.liftSpeed;
+        Constants.liftSpeed = 0.3;
         int initialPos = (lift1.getCurrentPosition() + lift2.getCurrentPosition()) / 2;
-        liftToPosition(initialPos - 125);
-        Thread.sleep(sleep);
-        clawOpen();
-        liftToPosition(initialPos + 150);
-        Thread.sleep(sleep + 200);
+        liftToPosition(initialPos - 250);
+        Thread.sleep(200);
+        claw.setPosition(0);
+        Thread.sleep(200);
+        Constants.liftSpeed = temp;
+    }
+    public void clawToggle() {
+        Constants.direction = !Constants.direction;
+        if (!Constants.direction) {
+            clawToggle = Constants.openClaw;
+        } else {
+            clawToggle = Constants.closedClaw;
+        }
+        claw.setPosition(clawToggle);
     }
 
     public void liftToPosition (int ticks) {
         if (ticks == 0) {
-            Constants.liftSpeed = 0.55;
+            Constants.liftSpeed = 0.8;
         }
         lift1.setTargetPosition(ticks);
         lift2.setTargetPosition(ticks);
@@ -245,58 +258,20 @@ public class SampleMecanumDrive extends MecanumDrive {
     }
 
     public void forwardArm() throws InterruptedException {
-        /*
-        double pos = Constants.armForwardPos;
-        if (Math.abs(arm.getPosition() - pos) > 0) {
-            arm.setPosition(pos + 0.2);
-            for (int i = 0; i < 20; i++) {
-                arm.setPosition(arm.getPosition() - 0.01);
-                Thread.sleep(50);
-            }
-            arm.setPosition(pos);
-        }
-
-         */
         arm.setPosition(Constants.armForwardPos);
     }
     public void prevBackArm() throws InterruptedException {
         arm.setPosition(Constants.armPrevBackPos);
     }
-    public void sidewayArm() throws InterruptedException {
-        /*
-        double pos = Constants.armSidewayPos;
-        if (Math.abs(arm.getPosition() - pos) > 0) {
-            if (arm.getPosition() < pos) {
-                arm.setPosition(pos - 0.2);
-                for (int i = 0; i < 20; i++) {
-                    arm.setPosition(arm.getPosition() + 0.01);
-                    Thread.sleep(50);
-                }
-            } else {
-                arm.setPosition(pos + 0.2);
-                for (int i = 0; i < 20; i++) {
-                    arm.setPosition(arm.getPosition() - 0.01);
-                }
-            }
-            arm.setPosition(pos);
-        }
 
-         */
+    public void sidewayArm() throws InterruptedException {
         arm.setPosition(Constants.armSidewayPos);
     }
     public void backwardArm() {
-        /*
-        double pos = Constants.armBackwardPos;
-        if (Math.abs(arm.getPosition() - pos) > 0) {
-            arm.setPosition(pos - 0.2);
-            for (int i = 0; i < 20; i++) {
-                arm.setPosition(arm.getPosition() + 0.01);
-            }
-            arm.setPosition(pos);
-        }
-
-         */
         arm.setPosition(Constants.armBackwardPos);
+    }
+    public void arm145() {
+        arm.setPosition(Constants.arm145ANGLE);
     }
 
    public void clawOpen() {
@@ -305,6 +280,10 @@ public class SampleMecanumDrive extends MecanumDrive {
 
     public void clawClose() {
         claw.setPosition(Constants.closedClaw);
+    }
+
+    public double getClawPos() {
+        return claw.getPosition();
     }
 
 

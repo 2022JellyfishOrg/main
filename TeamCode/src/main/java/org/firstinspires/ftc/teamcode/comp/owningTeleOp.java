@@ -36,6 +36,7 @@ public class owningTeleOp extends LinearOpMode {
     boolean atZero = true; // differentiates whether its a left or right button click, and does stuff accordingly
     int pos = 180; // either 90 or 180
     int sideConeCount = 1; // index of element (really the second cone because it goes from 0-4)
+    int mult = 1;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -74,9 +75,9 @@ public class owningTeleOp extends LinearOpMode {
                 if (turnSpeed.equals("slow")) {
                     drive.setWeightedDrivePower(
                             new Pose2d(
-                                    -gamepad1.left_stick_y,
-                                    -gamepad1.left_stick_x,
-                                    gamepad1.right_stick_x / 3 // 3x slow factor (default)
+                                    -gamepad1.left_stick_y / 2 * mult,
+                                    -gamepad1.left_stick_x / 2 * mult,
+                                    gamepad1.right_stick_x * 0.4 // 3x slow factor (default)
                             )
                     );
                 } else {
@@ -110,9 +111,15 @@ public class owningTeleOp extends LinearOpMode {
             // Read pose
             Pose2d poseEstimate = drive.getPoseEstimate();
 
+            if (gamepad1.left_trigger > 0.3) {
+                mult = 2;
+            } else {
+                mult = 1;
+            }
+
             // manual lift up (change line 115, value 60 to something else if its too slow or fast)
             if (gamepad1.right_trigger > 0.3) {
-                Constants.liftSpeed = 0.65;
+                Constants.liftSpeed = 0.8;
                 drive.liftToPosition(drive.getLiftPos() + 60);
                 sleep(100);
 
@@ -136,9 +143,9 @@ public class owningTeleOp extends LinearOpMode {
                 if (registerRightBumper.milliseconds() > 300) {
                     drive.counter++;
                     if (drive.getLiftPos() > drive.D3RightBumper()) {
-                        Constants.liftSpeed = 0.55;
+                        Constants.liftSpeed = 0.8;
                     } else {
-                        Constants.liftSpeed = 0.65;
+                        Constants.liftSpeed = 0.8;
                     }
                     drive.clawClose();
                     registerRightBumper.reset();
@@ -149,9 +156,9 @@ public class owningTeleOp extends LinearOpMode {
                     if (registerRightBumper.milliseconds() > 300) {
                         drive.counter = 3;
                         if (drive.getLiftPos() > drive.D3RightBumper()) {
-                            Constants.liftSpeed = 0.55;
+                            Constants.liftSpeed = 0.8;
                         } else {
-                            Constants.liftSpeed = 0.65;
+                            Constants.liftSpeed = 0.8;
                         }
                         drive.clawClose();
                         registerRightBumper.reset();
@@ -182,17 +189,17 @@ public class owningTeleOp extends LinearOpMode {
                     drive.backwardArm();
                 }
                 if (drive.getLiftPos() > 1000 && !atStart) {
-                    if (waitArm.milliseconds() > 1200 && !atStart) {
-                        drive.liftToPosition(0);
-                        waitArm.reset();
-                    }
-                } else if (drive.getLiftPos() > 600 && !atStart) {
                     if (waitArm.milliseconds() > 1500 && !atStart) {
                         drive.liftToPosition(0);
                         waitArm.reset();
                     }
+                } else if (drive.getLiftPos() > 600 && !atStart) {
+                    if (waitArm.milliseconds() > 1800 && !atStart) {
+                        drive.liftToPosition(0);
+                        waitArm.reset();
+                    }
                 } else {
-                    if (waitArm.milliseconds() > 1700 && !atStart) {
+                    if (waitArm.milliseconds() > 2100 && !atStart) {
                         drive.liftToPosition(0);
                         waitArm.reset();
                     }

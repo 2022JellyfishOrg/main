@@ -47,18 +47,22 @@ public class liftTest extends LinearOpMode {
 
             if (gamepad1.a) {
                 int liftPos = drive.getLiftPos();
-                drive.liftToPosition(liftPos + 20);
+                drive.liftToPosition(liftPos + 40);
                 sleep(50);
 
             } else if (gamepad1.b) {
                 int liftPos = drive.getLiftPos();
-                drive.liftToPosition(liftPos - 20);
+                drive.liftToPosition(liftPos - 40);
                 sleep(50);
             }
             Constants.lastA = gamepad1.y;
             telemetry.addData("lift1Pos", lift1.getCurrentPosition());
             telemetry.addData("lift2Pos", lift2.getCurrentPosition());
             telemetry.update();
+            if ((gamepad1.left_bumper && !Constants.lastA)) {
+                drive.clawToggle();
+            }
+            Constants.lastA = gamepad1.left_bumper;
         }
 
     }

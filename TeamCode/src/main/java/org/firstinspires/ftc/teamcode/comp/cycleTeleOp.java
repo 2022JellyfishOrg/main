@@ -24,12 +24,12 @@ public class cycleTeleOp extends LinearOpMode {
     // register for each button (gotta be a better way but it works...)
     ElapsedTime registerRightBumper = new ElapsedTime();
     ElapsedTime registerLeftBumper = new ElapsedTime();
-    ElapsedTime registerY = new ElapsedTime();
     ElapsedTime registerLeftButton = new ElapsedTime();
     ElapsedTime registerX = new ElapsedTime();
     ElapsedTime registerB = new ElapsedTime();
     ElapsedTime registerRightButton = new ElapsedTime();
-    ElapsedTime registerA = new ElapsedTime();
+    TouchSensor limitSwitch;
+
 
     ElapsedTime waitArm = new ElapsedTime(); // used for delays in right/left bumper
 
@@ -38,11 +38,14 @@ public class cycleTeleOp extends LinearOpMode {
     String clawVal = "open"; // either open or closed, this is a toggle
     boolean atStart = true; // used because you don't want timers to start until you've started an action
     boolean atZero = true; // differentiates whether its a left or right button click, and does stuff accordingly
-    int pos = 90; // either 90 or 180
+    boolean begin = true;
+    int pos = 145; // either 90 or 145
     int sideConeCount = 1; // index of element (really the second cone because it goes from 0-4)
+    int mult = 1;
 
     @Override
     public void runOpMode() throws InterruptedException {
+        limitSwitch = hardwareMap.get(TouchSensor.class, "limitSwitch");
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap); // object used in basically everything
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // DT runs without encoder
         drive.setPoseEstimate(PoseStorage.currentPose); // knowing our orientation can be helpful in field centric
@@ -51,6 +54,11 @@ public class cycleTeleOp extends LinearOpMode {
         drive.resetLiftEncoders();
         if (isStopRequested()) return;
         while (opModeIsActive() && !isStopRequested()) {
+            if (begin) {
+                drive.clawOpen();
+                begin = false;
+            }
+
             if (gamepad1.left_stick_button) {
                 /* whenever it shows "milliseconds = 300" it means the amount of delay between each button click
                 e.g. 300 means if you click once and then click again before 300 ms, it won't register it.
@@ -74,12 +82,19 @@ public class cycleTeleOp extends LinearOpMode {
                     }
                 }
             }
+
+
+            if (gamepad1.left_trigger > 0.3) {
+                mult = 2;
+            } else {
+                mult = 1;
+            }
             if (driveType.equals("robot")) {
                 if (turnSpeed.equals("slow")) {
                     drive.setWeightedDrivePower(
                             new Pose2d(
-                                    -gamepad1.left_stick_y,
-                                    -gamepad1.left_stick_x,
+                                    -gamepad1.left_stick_y / 2 * mult,
+                                    -gamepad1.left_stick_x / 2 * mult,
                                     gamepad1.right_stick_x / 3 // 3x slow factor (default)
                             )
                     );
@@ -116,7 +131,7 @@ public class cycleTeleOp extends LinearOpMode {
 
             // manual lift up (change line 115, value 60 to something else if its too slow or fast)
             if (gamepad1.right_trigger > 0.3) {
-                Constants.liftSpeed = 0.65;
+                Constants.liftSpeed = 1;
                 drive.liftToPosition(drive.getLiftPos() + 60);
                 sleep(100);
 
@@ -137,9 +152,9 @@ public class cycleTeleOp extends LinearOpMode {
                 if (registerRightBumper.milliseconds() > 300) {
                     drive.counter = 3; // high
                     if (drive.getLiftPos() > drive.D3RightBumper()) {
-                        Constants.liftSpeed = 0.55;
+                        Constants.liftSpeed = 1;
                     } else {
-                        Constants.liftSpeed = 0.65;
+                        Constants.liftSpeed = 1;
                     }
                     drive.clawClose(); // claw close at 0 seconds
                     registerRightBumper.reset(); // allow for new right bumper input
@@ -152,9 +167,9 @@ public class cycleTeleOp extends LinearOpMode {
                 if (registerRightBumper.milliseconds() > 300) {
                     drive.counter++;
                     if (drive.getLiftPos() > drive.D3RightBumper()) {
-                        Constants.liftSpeed = 0.55;
+                        Constants.liftSpeed = 1;
                     } else {
-                        Constants.liftSpeed = 0.65;
+                        Constants.liftSpeed = 1;
                     }
                     drive.clawClose();
                     registerRightBumper.reset();
@@ -167,56 +182,53 @@ public class cycleTeleOp extends LinearOpMode {
             if (!atZero) { // if right bumper (lift going up)
                 telemetry.addData("ARM SHOULD'VE MOVED", drive.getLiftPos());
                 telemetry.addData("position", pos);
-                if (waitArm.milliseconds() > 500 && !atStart) { // 500 ms after claw, the lift goes up
+                if (waitArm.milliseconds() > 450 && !atStart) { // 500 ms after claw, the lift goes up
                     drive.liftToPosition(drive.D3RightBumper());
                 }
-                if (waitArm.milliseconds() > 1000 && !atStart) { // 1000 ms after claw, arm moves
+                if (drive.getLiftPos() > 230 && !atStart) { // 1000 ms after claw, arm moves
                     if (pos == 90) {
                         drive.sidewayArm();
                     } else {
-                        drive.forwardArm();
+                        drive.arm145();
                     }
                     waitArm.reset(); // reset timer at the end so that it can take in new input from waitArm
                 }
 
-            } else { // left bumper (lift going down)
-                if (drive.getLiftPos() < 480 && !atStart) { // if lift pos is less than 480 ticks, move from diagonal arm to backward arm
+            } else {
+                int dipPos = Constants.highLift - 250;
+                if (drive.getLiftPos() < dipPos && !atStart) { // if lift pos is less than 1050 ticks, move from diagonal arm to backward arm
                     drive.backwardArm();
                 }
+                if (waitArm.milliseconds() > 1300 && !atStart) {
+                    drive.clawOpen();
+                }
                 if (drive.getLiftPos() > 1000 && !atStart) { // if lift is at high wait 1200 ms
-                    if (waitArm.milliseconds() > 1200 && !atStart) {
-                        drive.liftToPosition(0);
+                    if (waitArm.milliseconds() > 1400 && !atStart) {
+                        drive.liftToPosition(-20);
                         waitArm.reset();
                     }
                 } else if (drive.getLiftPos() > 600 && !atStart) { // if lift is at med wait 1500
-                    if (waitArm.milliseconds() > 1500 && !atStart) {
-                        drive.liftToPosition(0);
+                    if (waitArm.milliseconds() > 1400 && !atStart) {
+                        drive.liftToPosition(-20);
                         waitArm.reset();
                     }
                 } else {
-                    if (waitArm.milliseconds() > 1700 && !atStart) { // if lift is at low wait 1700
-                        drive.liftToPosition(0);
+                    if (waitArm.milliseconds() > 2000 && !atStart) { // if lift is at low wait 1700
+                        drive.liftToPosition(-20);
                         waitArm.reset();
                     }
                 }
             }
 
-            if (gamepad1.a) { // new claw macro
-                if (registerA.milliseconds() > 300) {
-                    if (clawVal.equals("open")) {
-                        drive.clawClose();
-                        clawVal = "closed";
-                    } else {
-                        drive.clawOpen();
-                        clawVal = "open";
-                    }
-                }
+            if ((gamepad1.a && !Constants.lastA)) {
+                drive.clawToggle();
             }
+            Constants.lastA = gamepad1.a;
 
             if (gamepad1.b) { // change between 90 and 180 (add to function above to make it automatic)
                 if (registerB.milliseconds() > 250) {
                     if (pos == 90) {
-                        pos = 180;
+                        pos = 145;
                     } else {
                         pos = 90;
                     }
@@ -235,9 +247,14 @@ public class cycleTeleOp extends LinearOpMode {
                 registerX.reset();
             }
             telemetry.addData("ARM POSITION: ", pos);
+            if (limitSwitch.isPressed()) {
+                drive.resetLiftEncoders();
+                telemetry.addData("ZERO POS", drive.getLiftPos());
+            }
             telemetry.update();
         }
     }
+
 }
 
 
