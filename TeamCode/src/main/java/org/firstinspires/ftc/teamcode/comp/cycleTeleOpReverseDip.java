@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.drive.opmode.PoseStorage;
 
 @TeleOp
-public class owningTeleOp extends LinearOpMode {
+public class cycleTeleOpReverseDip extends LinearOpMode {
 
     // register for each button (gotta be a better way but it works...)
     ElapsedTime registerRightBumper = new ElapsedTime();
@@ -33,7 +33,7 @@ public class owningTeleOp extends LinearOpMode {
     boolean atStart = true; // used because you don't want timers to start until you've started an action
     boolean atZero = true; // differentiates whether its a left or right button click, and does stuff accordingly
     boolean begin = true;
-    int pos = 180; // either 90 or 145
+    int pos = 145; // either 90 or 145
     int sideConeCount = 1; // index of element (really the second cone because it goes from 0-4)
     int mult = 1;
 
@@ -118,7 +118,7 @@ public class owningTeleOp extends LinearOpMode {
             if (gamepad1.left_bumper) {
                 if (registerLeftBumper.milliseconds() > 300) {
                     if (!atZero) { // if you are ready to go up (not going to zero)
-                        drive.liftDip(300);
+                        drive.reverseDip();
                         drive.prevBackArm(); // don't move arm until you are lower than a certain point to prevent getting stuck on shoulder
                         atZero = true; // ready to go down
                         drive.counter = 0;
@@ -128,16 +128,31 @@ public class owningTeleOp extends LinearOpMode {
             if (gamepad1.right_bumper) {
                 atStart = false;
                 if (registerRightBumper.milliseconds() > 300) {
+                    drive.counter = 3; // high
+                    if (drive.getLiftPos() > drive.D3RightBumper()) {
+                        Constants.liftSpeed = 1;
+                    } else {
+                        Constants.liftSpeed = 1;
+                    }// claw close at 0 seconds
+                    drive.clawClose();
+                    registerRightBumper.reset(); // allow for new right bumper input
+                    atZero = false; // lift ready to go up
+                    waitArm.reset(); // starts timer for arm
+                    telemetry.addData("atZero", atZero);
+
+                }
+            } else if (gamepad1.y) { // same code as right bumper, but incremental instead of high
+                if (registerRightBumper.milliseconds() > 300) {
                     drive.counter++;
                     if (drive.getLiftPos() > drive.D3RightBumper()) {
                         Constants.liftSpeed = 1;
                     } else {
                         Constants.liftSpeed = 1;
                     }
-                    drive.clawClose(); // claw close at 0 seconds
-                    registerRightBumper.reset(); // allow for new right bumper input
-                    atZero = false; // lift ready to go up
-                    waitArm.reset(); // starts timer for arm
+                    drive.clawClose();
+                    registerRightBumper.reset();
+                    atZero = false;
+                    waitArm.reset();
                     telemetry.addData("atZero", atZero);
 
                 }
@@ -145,24 +160,31 @@ public class owningTeleOp extends LinearOpMode {
             if (!atZero) { // if right bumper (lift going up)
                 telemetry.addData("ARM SHOULD'VE MOVED", drive.getLiftPos());
                 telemetry.addData("position", pos);
-                if (waitArm.milliseconds() > 450 && !atStart) { // 500 ms after claw, the lift goes up
-                    drive.liftToPosition(drive.D3RightBumper());
+                if (waitArm.milliseconds() > 450 && !atStart) {
+                    if (drive.counter % 3 == 0) {
+                       drive.liftToPosition(Constants.highLift - 200);
+                    } else {
+                        drive.liftToPosition(drive.D3RightBumper());
+                    }
                 }
                 if (drive.getLiftPos() > 230 && !atStart) { // 1000 ms after claw, arm moves
                     if (pos == 90) {
                         drive.sidewayArm();
                     } else {
-                        drive.forwardArm(); // in cycle this would be 145 deg (drive.arm145Pos())
+                        drive.arm145();
                     }
                     waitArm.reset(); // reset timer at the end so that it can take in new input from waitArm
                 }
 
             } else {
                 int dipPos = Constants.highLift - 250;
-                if (drive.getLiftPos() < dipPos && !atStart) { // if lift pos is less than 1050 ticks, move from diagonal arm to backward arm
+                if (drive.getLiftPos() < dipPos && !atStart) {
+                    drive.clawWideOpen();// if lift pos is less than 1050 ticks, move from diagonal arm to backward arm
+                }
+                if (drive.getLiftPos() < dipPos - 100 && !atStart) {
                     drive.backwardArm();
                 }
-                if (waitArm.milliseconds() > 1300 && !atStart) {
+                if (drive.getLiftPos() < dipPos - 300 && !atStart) {
                     drive.clawOpen();
                 }
                 if (drive.getLiftPos() > 1000 && !atStart) { // if lift is at high wait 1200 ms
@@ -211,7 +233,7 @@ public class owningTeleOp extends LinearOpMode {
             }
             telemetry.addData("ARM POSITION: ", pos);
             if (limitSwitch.isPressed()) {
-                drive.resetLiftEncoders(); // no idea if this works or not
+                drive.resetLiftEncoders();
                 telemetry.addData("ZERO POS", drive.getLiftPos());
             }
             telemetry.update();

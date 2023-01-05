@@ -57,7 +57,7 @@ import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kV;
 @Config
 public class SampleMecanumDrive extends MecanumDrive {
 
-    public static int [] heights = {200, 150, 100, 66, 0};
+    public static int [] heights = {258, 195, 136, 70, 0};
 
 
     public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(9, 0, 1);
@@ -197,6 +197,7 @@ public class SampleMecanumDrive extends MecanumDrive {
         lift2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
     public void liftConfig(String height) {
+        Constants.liftSpeed = 1;
         if (height.equals("low")) {
             liftToPosition(Constants.lowLift);
         } else if (height.equals("medium")) {
@@ -224,6 +225,16 @@ public class SampleMecanumDrive extends MecanumDrive {
         Thread.sleep(200);
         claw.setPosition(0);
         Thread.sleep(200);
+        Constants.liftSpeed = temp;
+    }
+    public void reverseDip() throws InterruptedException {
+        double temp = Constants.liftSpeed;
+        Constants.liftSpeed = 0.7;
+        int initialPos = (lift1.getCurrentPosition() + lift2.getCurrentPosition()) / 2;
+        liftToPosition(initialPos + 350);
+        Thread.sleep(300);
+        Constants.liftSpeed = 0.4;
+        liftToPosition(initialPos - 100);
         Constants.liftSpeed = temp;
     }
     public void clawToggle() {
@@ -280,6 +291,10 @@ public class SampleMecanumDrive extends MecanumDrive {
 
     public void clawClose() {
         claw.setPosition(Constants.closedClaw);
+    }
+
+    public void clawWideOpen() {
+        claw.setPosition(0);
     }
 
     public double getClawPos() {

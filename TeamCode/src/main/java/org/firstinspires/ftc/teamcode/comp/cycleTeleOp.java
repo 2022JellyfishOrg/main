@@ -83,30 +83,14 @@ public class cycleTeleOp extends LinearOpMode {
                 }
             }
 
-
-            if (gamepad1.left_trigger > 0.3) {
-                mult = 2;
-            } else {
-                mult = 1;
-            }
             if (driveType.equals("robot")) {
-                if (turnSpeed.equals("slow")) {
-                    drive.setWeightedDrivePower(
-                            new Pose2d(
-                                    -gamepad1.left_stick_y / 2 * mult,
-                                    -gamepad1.left_stick_x / 2 * mult,
-                                    gamepad1.right_stick_x / 3 // 3x slow factor (default)
-                            )
-                    );
-                } else {
-                    drive.setWeightedDrivePower(
-                            new Pose2d(
-                                    -gamepad1.left_stick_y,
-                                    -gamepad1.left_stick_x,
-                                    gamepad1.right_stick_x // no 3x factor
-                            )
-                    );
-                }
+                drive.setWeightedDrivePower(
+                        new Pose2d(
+                                (gamepad1.left_stick_y / 2) * (1+gamepad1.right_trigger) * (1-gamepad1.left_trigger),
+                                (gamepad1.left_stick_x / 2) * (1+gamepad1.right_trigger) * (1-gamepad1.left_trigger),
+                                -gamepad1.right_stick_x / 2 * (1+gamepad1.right_trigger) * (1-gamepad1.left_trigger)// 3x slow factor (default)
+                        )
+                );
             } else { // field centric
                 Pose2d poseEstimate = drive.getPoseEstimate();
                 Vector2d input = new Vector2d(
@@ -130,7 +114,7 @@ public class cycleTeleOp extends LinearOpMode {
             Pose2d poseEstimate = drive.getPoseEstimate();
 
             // manual lift up (change line 115, value 60 to something else if its too slow or fast)
-            if (gamepad1.right_trigger > 0.3) {
+            if (gamepad1.dpad_up) {
                 Constants.liftSpeed = 1;
                 drive.liftToPosition(drive.getLiftPos() + 60);
                 sleep(100);
@@ -189,7 +173,7 @@ public class cycleTeleOp extends LinearOpMode {
                     if (pos == 90) {
                         drive.sidewayArm();
                     } else {
-                        drive.arm145();
+                        drive.arm145(); // change to drive.forwardArm() in owning (bc its 90 and 180 not 90 and 145).
                     }
                     waitArm.reset(); // reset timer at the end so that it can take in new input from waitArm
                 }
@@ -199,7 +183,7 @@ public class cycleTeleOp extends LinearOpMode {
                 if (drive.getLiftPos() < dipPos && !atStart) { // if lift pos is less than 1050 ticks, move from diagonal arm to backward arm
                     drive.backwardArm();
                 }
-                if (waitArm.milliseconds() > 1300 && !atStart) {
+                if (waitArm.milliseconds() > 1300 && !atStart) { // Wait 1300 ms from when left bumper was clicked to reset claw back to normal open, rather than COMPLETELY open
                     drive.clawOpen();
                 }
                 if (drive.getLiftPos() > 1000 && !atStart) { // if lift is at high wait 1200 ms

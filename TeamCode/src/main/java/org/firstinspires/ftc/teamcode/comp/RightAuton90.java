@@ -9,23 +9,20 @@ import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.Constants;
+import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.vision.AprilTagDetectionPipeline;
-import org.firstinspires.ftc.teamcode.vision.Detector;
 import org.openftc.easyopencv.OpenCvCamera;
-import org.openftc.easyopencv.OpenCvCameraFactory;
-import org.openftc.easyopencv.OpenCvCameraRotation;
 
 @Autonomous
-public class RightAuton extends LinearOpMode {
+public class RightAuton90 extends LinearOpMode {
 
     Trajectory toPreload1;
     Trajectory toPreload2;
-    Trajectory toLoad;
+    Trajectory toLoad1;
+    Trajectory toLoad2;
     Trajectory toPark;
     Trajectory toDeposit;
     TrajectoryBuilder toDepositInit;
@@ -67,8 +64,8 @@ public class RightAuton extends LinearOpMode {
 
         Pose2d startPose = new Pose2d(35.5, -61, 0);
         Pose2d preloadPose = new Pose2d(30.5, -8.2, Math.toRadians(-60));
-        Pose2d depositPose = new Pose2d(28, -9.5, Math.toRadians(-60));
-        Pose2d loadPose = new Pose2d(57, -9, 0);
+        Pose2d depositPose = new Pose2d(22.5, -11, Math.toRadians(90));
+        Pose2d loadPose = new Pose2d(56.5, -10, 0);
 
         drive.setPoseEstimate(startPose);
         int pos = (36 + (24 * (signalZonePos - 2)));
@@ -80,18 +77,20 @@ public class RightAuton extends LinearOpMode {
         toPreload2 = drive.trajectoryBuilder(toPreload1.end())
                 .lineToLinearHeading(preloadPose)
                 .build();
-        toLoad = drive.trajectoryBuilder(depositPose)
+        toLoad1 = drive.trajectoryBuilder(preloadPose)
                 .lineToLinearHeading(loadPose)
                 .addTemporalMarker(0.5, () -> drive.liftConfig("sideCone"))
                 .build();
-        toDeposit = drive.trajectoryBuilder(toLoad.end())
+        toDeposit = drive.trajectoryBuilder(loadPose)
                 // .lineToLinearHeading(depositPose)
                 .lineToLinearHeading(depositPose)
-                .addTemporalMarker(0.5, () -> drive.setArm(Constants.armForwardPos))
+                .build();
+        toLoad2 = drive.trajectoryBuilder(depositPose)
+                // .lineToLinearHeading(depositPose)
+                .lineToLinearHeading(loadPose)
                 .build();
         toPark = drive.trajectoryBuilder(toDeposit.end())
                 .lineToLinearHeading(new Pose2d(pos, -10, 0))
-                .addTemporalMarker (0.25, () -> drive.setArm(Constants.armBackwardPos))
                 .addTemporalMarker (0.5, () -> drive.liftConfig("zero"))
                 .build();
 
@@ -105,10 +104,15 @@ public class RightAuton extends LinearOpMode {
         for (int i = 0; i < 5; i++) {
             sleep(200);
             drive.liftDip(400);
-            drive.setArm(Constants.armBackwardPos);
-            sleep(600);
+            sleep(400);
+            drive.backwardArm();
+            sleep(300);
             drive.clawOpen();
-            drive.followTrajectory(toLoad);
+            if (i == 0) {
+                drive.followTrajectory(toLoad1);
+            } else {
+                drive.followTrajectory(toLoad2);
+            }
             drive.clawClose();
             sleep(500);
             drive.liftConfig ("high");
