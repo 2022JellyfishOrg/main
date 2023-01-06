@@ -125,9 +125,9 @@ public class owningTeleOp extends LinearOpMode {
                     }
                 }
             }
-            if (gamepad1.right_bumper) {
-                atStart = false;
+            if (gamepad1.right_bumper) {;
                 if (registerRightBumper.milliseconds() > 300) {
+                    atStart = false;
                     drive.counter++;
                     if (drive.getLiftPos() > drive.D3RightBumper()) {
                         Constants.liftSpeed = 1;

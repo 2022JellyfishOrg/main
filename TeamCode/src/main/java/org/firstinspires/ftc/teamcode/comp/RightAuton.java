@@ -25,7 +25,8 @@ public class RightAuton extends LinearOpMode {
 
     Trajectory toPreload1;
     Trajectory toPreload2;
-    Trajectory toLoad;
+    Trajectory toLoad1;
+    Trajectory toLoad2;
     Trajectory toPark;
     Trajectory toDeposit;
     TrajectoryBuilder toDepositInit;
@@ -66,27 +67,32 @@ public class RightAuton extends LinearOpMode {
          */
 
         Pose2d startPose = new Pose2d(35.5, -61, 0);
-        Pose2d preloadPose = new Pose2d(30.5, -8.2, Math.toRadians(-60));
-        Pose2d depositPose = new Pose2d(28, -9.5, Math.toRadians(-60));
-        Pose2d loadPose = new Pose2d(57, -9, 0);
+        Pose2d preloadPose = new Pose2d(29.5, -8, Math.toRadians(-60));
+        Pose2d depositPose = new Pose2d(29.5, -8.8, Math.toRadians(-60));
+        Pose2d loadPose1 = new Pose2d(31, -9, 0);
+        Pose2d loadPose2 = new Pose2d(56, -8, 0);
 
         drive.setPoseEstimate(startPose);
         int pos = (36 + (24 * (signalZonePos - 2)));
 
         toPreload1 = drive.trajectoryBuilder(startPose)
-                .lineTo(new Vector2d(39, -18))
+                .lineTo(new Vector2d(36, -18))
                 .addTemporalMarker(0.5, () -> drive.setArm(Constants.armForwardPos))
                 .build();
         toPreload2 = drive.trajectoryBuilder(toPreload1.end())
                 .lineToLinearHeading(preloadPose)
                 .build();
-        toLoad = drive.trajectoryBuilder(depositPose)
-                .lineToLinearHeading(loadPose)
+        toLoad1 = drive.trajectoryBuilder(depositPose)
+                .lineToSplineHeading(loadPose1)
                 .addTemporalMarker(0.5, () -> drive.liftConfig("sideCone"))
                 .build();
-        toDeposit = drive.trajectoryBuilder(toLoad.end())
+        toLoad2 = drive.trajectoryBuilder(loadPose1)
+                .lineToLinearHeading(loadPose2)
+                .addTemporalMarker(0.5, () -> drive.liftConfig("sideCone"))
+                .build();
+        toDeposit = drive.trajectoryBuilder(loadPose2)
                 // .lineToLinearHeading(depositPose)
-                .lineToLinearHeading(depositPose)
+                .lineToSplineHeading(depositPose)
                 .addTemporalMarker(0.5, () -> drive.setArm(Constants.armForwardPos))
                 .build();
         toPark = drive.trajectoryBuilder(toDeposit.end())
@@ -102,13 +108,14 @@ public class RightAuton extends LinearOpMode {
         drive.liftConfig("high");
         drive.followTrajectory(toPreload1);
         drive.followTrajectory(toPreload2);
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 1; i++) {
             sleep(200);
             drive.liftDip(400);
             drive.setArm(Constants.armBackwardPos);
             sleep(600);
             drive.clawOpen();
-            drive.followTrajectory(toLoad);
+            drive.followTrajectory(toLoad1);
+            drive.followTrajectory(toLoad2);
             drive.clawClose();
             sleep(500);
             drive.liftConfig ("high");
