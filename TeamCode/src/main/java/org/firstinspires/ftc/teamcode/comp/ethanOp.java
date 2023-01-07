@@ -5,10 +5,6 @@
 //Joystick Left - Directional Movement at 50% power, faster with RT
 //Joystick Right - Turning at 50% power, faster with RT
 
-//Joystick Left Press - N/A (Hard to click)
-//Joystick Right Press - N/A (Hard to click)
-
-//Left Toggle - N/A
 //Right Toggle - Increases movement and turning up to 100%
 
 //Left Bumper - Dips at any height, wide claw, then resets slides and claw
@@ -17,14 +13,19 @@
 //A - Cone Stack, 2, 3, 4, 5, in that order repeating
 //B - Toggles between to Owning and Cycling, with Cycling as the default
 //X - Reset slides to 0, manually
-//Y - Spin the Robot 180 degrees [TO DO]
+//Y - Turn the Robot 180 degrees from where it is
 
 //D-Up - Manual Up, in case something gets stuck
-//D-Right - N/A
-//D-Left - N/A
 //D-Down - Manual Down, for backup reasons
 
-//MODE - N/A
+//MODE - Used for moving the drivetrain in straight lines
+
+//Not used:
+//Left Toggle - Haven't found a use case for it, slow mode wasn't very helpful
+//D-Right - Dpad Hard to use, could accidentally hit the up/down
+//D-Left - Dpad Hard to use, could accidentally hit the up/down
+//Joystick Left Press - Hard to click and can be accidentally clicked
+//Joystick Right Press - Hard to click and can be accidentally clicked
 
 //Bunch of imports and unhelpful boring stuff
 package org.firstinspires.ftc.teamcode.comp;
@@ -47,20 +48,28 @@ import org.firstinspires.ftc.teamcode.drive.opmode.PoseStorage;
 //
 
 @TeleOp
-public class EthanOp extends LinearOpMode {
+public class ethanOp extends LinearOpMode {
     //Some timers and variables
     ElapsedTime registerRightBumper = new ElapsedTime();
     ElapsedTime registerLeftBumper = new ElapsedTime();
+
     ElapsedTime registerA = new ElapsedTime();
+    ElapsedTime registerB = new ElapsedTime();
+    ElapsedTime registerX = new ElapsedTime();
+    TouchSensor limitSwitch;
+
     ElapsedTime waitArm = new ElapsedTime();
     String driveType = "robot";
+
+    //Turning 180
+    ElapsedTime registerY = new ElapsedTime();
+    boolean setting = true;
+    double target180 = 0.0;
 
     boolean atStart = true;
     boolean begin = true;
     boolean atHome = true; //should actually be called atHome
-    int pos = 180;
-    int mult = 1;
-    TouchSensor limitSwitch;
+    boolean sideConeActive = false;
 
     //Cone heights
     int [] coneHeights = {70, 136, 195, 258};
@@ -74,7 +83,6 @@ public class EthanOp extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         //Probably don't need to know
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
-        limitSwitch = hardwareMap.get(TouchSensor.class, "limitSwitch");
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         drive.setPoseEstimate(PoseStorage.currentPose);
         waitForStart();
@@ -95,12 +103,13 @@ public class EthanOp extends LinearOpMode {
             if (driveType.equals("robot")) {
                 drive.setWeightedDrivePower(
                         new Pose2d(
-                                (gamepad1.left_stick_y / 2) * (1+gamepad1.right_trigger) * (1-gamepad1.left_trigger),
-                                (gamepad1.left_stick_x / 2) * (1+gamepad1.right_trigger) * (1-gamepad1.left_trigger),
-                                -gamepad1.right_stick_x / 2 * (1+gamepad1.right_trigger) * (1-gamepad1.left_trigger)
+                                (gamepad1.left_stick_y / 2) * (1+gamepad1.right_trigger), //Change speeds to 0.6? So that cycles are faster?
+                                (gamepad1.left_stick_x / 2) * (1+gamepad1.right_trigger), //Same for here as well
+                                (-gamepad1.right_stick_x / 2) * (1+gamepad1.right_trigger)
                         )
                 );
             }
+
             // Update everything. Odometry. Etc.
             drive.update();
 
@@ -111,6 +120,7 @@ public class EthanOp extends LinearOpMode {
             if (gamepad1.left_bumper) {
                 if (registerLeftBumper.milliseconds() > 300) {
                     if (!atHome) {
+                        sideConeActive = false;
                         drive.liftDip(300);
                         drive.backwardArm();
                         atHome = true;
@@ -118,18 +128,18 @@ public class EthanOp extends LinearOpMode {
                     }
                 }
             }
-
             //Determines cycling/owning, then closes claw, resets the timer, starts !atHome, resets the other timer, and prints
             if (gamepad1.right_bumper) {
-                atStart = false;
                 if (registerRightBumper.milliseconds() > 300) {
-
+                    sideConeActive = false;
+                    atStart = false;
                     //Decide between owning and cycling:
                     if (toggleSwitch) { //cycling high
                         drive.counter = 3;
                     } else { //owning/low/medium/high
                         drive.counter++;
                     }
+
                     Constants.liftSpeed = 1;
                     drive.clawClose();
                     registerRightBumper.reset();
@@ -141,28 +151,18 @@ public class EthanOp extends LinearOpMode {
             }
 
             //The next step after right bumper
-            if (!atHome) {
+            if (!atHome && !sideConeActive) {
                 telemetry.addData("ARM SHOULD'VE MOVED", drive.getLiftPos());
 
-                if (drive.counter == 1) { //This means it's been clicked one time, and slides are up, clicking it 3 more times back to low, and the value is 4, for owning
+                //REFINE HERE: Shortest Time Possible so that the claw grabs, slides move up, then the arm does
+                if (drive.counter == 1 || toggleSwitch) { //This means it's been clicked one time, and slides are up, clicking it 3 more times back to low, and the value is 4, for owning
                     //Start moving to slides height determined in the first right bumper part
-                    if (waitArm.milliseconds() > 600) {
+                    //toggleSwitch is for cycling, since  you'd want delays
+                    if (waitArm.milliseconds() > 350 && !atStart) { //600
                         drive.liftToPosition(drive.D3RightBumper());
                     }
-
                     //Start arm, after the slides have begun moving UP
-                    if (waitArm.milliseconds() > 800) {
-                        drive.forwardArm();
-                        waitArm.reset();
-                    }
-                } else if (toggleSwitch) { //for cycling, since you want delays
-                    //Start moving to slides height determined in the first right bumper part
-                    if (waitArm.milliseconds() > 600) {
-                        drive.liftToPosition(drive.D3RightBumper());
-                    }
-
-                    //Start arm, after the slides have begun moving UP
-                    if (waitArm.milliseconds() > 800) {
+                    if (waitArm.milliseconds() > 450 && !atStart) { //800
                         drive.forwardArm();
                         waitArm.reset();
                     }
@@ -171,7 +171,7 @@ public class EthanOp extends LinearOpMode {
                     waitArm.reset(); //idk if we need this but I though I'd reset either way
                 }
 
-            } else { //The next step after left bumper, these are all the wait times for different heights
+            } else if (!sideConeActive) { //The next step after left bumper, these are all the wait times for different heights
                 int dipPos = Constants.highLift - 250;
 
                 if (drive.getLiftPos() < dipPos && !atStart) { // if lift pos is less than 1050 ticks, move from diagonal arm to backward arm
@@ -181,24 +181,24 @@ public class EthanOp extends LinearOpMode {
                 //This is the delay after the claw has dropped cone/been set to 0/WIDE Open, during the lift dip
                 //Having a delay this long allows for the claw to fully open, and then proceed with the following actions
                 //This ensure we don't knock over the junction or hit it in any way; it's also faster
-                //The delay should be from the millisecond it drops to the point at which it's out of the hitting junction zone
-                if (waitArm.milliseconds() > 1400 && !atStart) { //DECREASE THIS DELAY
+                //REFINE HERE: The delay should be from the millisecond it drops to the point at which it's out of the hitting junction zone
+                if (waitArm.milliseconds() > 1000 && !atStart) { //1400
                     drive.clawOpen();
                 }
 
-                //These are the times that will wait until the slides start moving down, THESE MUST BE FINE TUNED
-                if (drive.getLiftPos() > 1000 && !atStart) { // HIGH
-                    if (waitArm.milliseconds() > 1500 && !atStart) { //WAIT 1500 ms, since you don't want to crash slides while arm is moving
+                //REFINE HERE: Delays until the slides start moving down, low should take the longest, high the shortest
+                if (drive.getLiftPos() > 1100 && !atStart) { // HIGH
+                    if (waitArm.milliseconds() > 1000 && !atStart) { //WAIT 1000 original ms, since you don't want to crash slides while arm is moving
                         drive.liftToPosition(-20);
                         waitArm.reset();
                     }
                 } else if (drive.getLiftPos() > 600 && !atStart) { //MEDIUM
-                    if (waitArm.milliseconds() > 1500 && !atStart) { //WAIT 1500 ms
+                    if (waitArm.milliseconds() > 1200 && !atStart) { //WAIT 1200 ms
                         drive.liftToPosition(-20);
                         waitArm.reset();
                     }
                 } else { //LOW
-                    if (waitArm.milliseconds() > 1800 && !atStart) { //WAIT 1800 ms, since you don't want to crash slides while arm is moving
+                    if (waitArm.milliseconds() > 1600 && !atStart) { //WAIT 1600 ms, since you don't want to crash slides while arm is moving
                         drive.liftToPosition(-20);
                         waitArm.reset();
                     }
@@ -207,10 +207,13 @@ public class EthanOp extends LinearOpMode {
 
             //Toggling between cycling and owning
             if (gamepad1.b) {
-                if (toggleSwitch) { //If cycling, go to owning
-                    toggleSwitch = false;
-                } else { //If owning, go to cycling
-                    toggleSwitch = true;
+                if (registerB.milliseconds() > 300) {
+                    if (toggleSwitch) { //If cycling, go to owning
+                        toggleSwitch = false;
+                    } else { //If owning, go to cycling
+                        toggleSwitch = true;
+                    }
+                    registerB.reset();
                 }
             }
 
@@ -218,8 +221,9 @@ public class EthanOp extends LinearOpMode {
             //NOTE* AUTON AND TELE ARE NO LONGER RUNNING THE SAME CONE STACK HEIGHTS IF VALUES ARE CHANGED, AND THEY ARE, ORDER IS DIFFERENT
             if (gamepad1.a) {
                 if (registerA.milliseconds() > 300) {
+                    sideConeActive = true;
                     int desiredPos = coneHeights[sideConeCount];
-                    if (sideConeCount == 3) { //max cone height/pressed 3 times
+                    if (sideConeCount == 3) { //max cone height/pressed 3 times, go back to 2nd cone height
                         sideConeCount = 0;
                     } else {
                         sideConeCount++;
@@ -229,9 +233,27 @@ public class EthanOp extends LinearOpMode {
                 }
             }
 
-            //Reset the lift, manually, in case it's a bit off or something was pulled
+            //To Reset the Lift, manually
             if (gamepad1.x && limitSwitch.isPressed()) {
-                drive.resetLiftEncoders();
+                if (registerX.milliseconds() > 300) {
+                    drive.resetLiftEncoders();
+                    registerX.reset();
+                }
+            }
+
+            if (gamepad1.y && setting) { //Turn 180 clockwise
+                if (registerY.milliseconds() > 300) {
+                    //setting the targetPos
+                    target180 = poseEstimate.getHeading() + 180;
+                    //if it's outside of the turning area
+                    if (target180 > 360) {
+                        target180 = target180 - 360;
+                    }
+
+                    drive.turn(target180); //Change to negative to turn the other way
+
+                    registerY.reset();
+                }
             }
 
             if (gamepad1.dpad_up) { //Manual Up, also sleeps a bit
@@ -248,7 +270,9 @@ public class EthanOp extends LinearOpMode {
             telemetry.addData("x", poseEstimate.getX());
             telemetry.addData("y", poseEstimate.getY());
             telemetry.addData("heading", poseEstimate.getHeading());
+            telemetry.addData("cycling true, owning false: ", toggleSwitch);
             telemetry.update();
         }
     }
 }
+
