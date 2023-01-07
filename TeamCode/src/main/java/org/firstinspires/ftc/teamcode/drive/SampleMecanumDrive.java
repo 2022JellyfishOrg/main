@@ -268,14 +268,14 @@ public class SampleMecanumDrive extends MecanumDrive {
         lift2.setPower(0);
     }
 
-    public void forwardArm() throws InterruptedException {
+    public void forwardArm(){
         arm.setPosition(Constants.armForwardPos);
     }
-    public void prevBackArm() throws InterruptedException {
+    public void prevBackArm() {
         arm.setPosition(Constants.armPrevBackPos);
     }
 
-    public void sidewayArm() throws InterruptedException {
+    public void sidewayArm() {
         arm.setPosition(Constants.armSidewayPos);
     }
     public void backwardArm() {

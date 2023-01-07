@@ -27,13 +27,22 @@ public class MeepMeepTesting {
 
         RoadRunnerBotEntity myBot = new DefaultBotBuilder(meepMeep)
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
-                .setConstraints(58.3191798, 50, 4.6055, 4.6055, 12)
+                .setConstraints(58.3191798, 20, 4.6055, 2, 12)
                 .setDimensions(14.5,18)
                 .followTrajectorySequence(drive ->
                         drive.trajectorySequenceBuilder(new Pose2d(35.5, -61, 0))
-                                .lineToLinearHeading(new Pose2d(28, -8.5, Math.toRadians(-60)))
-                                .lineToSplineHeading(new Pose2d(54.8, -9, 0))
-                                .lineToSplineHeading(new Pose2d(28, -8.5, Math.toRadians(-60)))
+                                //PARKING: ALL ARE FROM DEPOSIT
+
+                                //Parking Spot 1
+                                .lineToSplineHeading(new Pose2d(34, -10, Math.toRadians(0)))
+                                .splineToConstantHeading(new Vector2d(12, -12), Math.toRadians(200))
+
+                                //Parking Spot 2
+                                .lineToSplineHeading(new Pose2d(36, -12, Math.toRadians(0)))
+
+                                //Parking Spot 3, although I think it also decelerates
+                                .lineToSplineHeading(new Pose2d(40, -12, Math.toRadians(0)))
+                                .splineToConstantHeading(new Vector2d(59,-12), Math.toRadians(0))
                                 .build()
 
 
