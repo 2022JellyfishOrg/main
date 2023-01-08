@@ -83,6 +83,7 @@ public class ethanOp extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         //Probably don't need to know
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+        limitSwitch = hardwareMap.get(TouchSensor.class, "limitSwitch");
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         drive.setPoseEstimate(PoseStorage.currentPose);
         waitForStart();
@@ -103,9 +104,9 @@ public class ethanOp extends LinearOpMode {
             if (driveType.equals("robot")) {
                 drive.setWeightedDrivePower(
                         new Pose2d(
-                                (gamepad1.left_stick_y / 2) * (1+gamepad1.right_trigger), //Change speeds to 0.6? So that cycles are faster?
-                                (gamepad1.left_stick_x / 2) * (1+gamepad1.right_trigger), //Same for here as well
-                                (-gamepad1.right_stick_x / 2) * (1+gamepad1.right_trigger)
+                                (gamepad1.left_stick_y * 0.4) * (1+gamepad1.right_trigger), //Change speeds to 0.6? So that cycles are faster?
+                                (gamepad1.left_stick_x * 0.4) * (1+gamepad1.right_trigger), //Same for here as well
+                                (-gamepad1.right_stick_x  * 0.35) * (1+gamepad1.right_trigger)
                         )
                 );
             }
@@ -171,7 +172,8 @@ public class ethanOp extends LinearOpMode {
                     waitArm.reset(); //idk if we need this but I though I'd reset either way
                 }
 
-            } else if (!sideConeActive) { //The next step after left bumper, these are all the wait times for different heights
+            } else if (!sideConeActive) {
+                sideConeCount = 0;//The next step after left bumper, these are all the wait times for different heights
                 int dipPos = Constants.highLift - 250;
 
                 if (drive.getLiftPos() < dipPos && !atStart) { // if lift pos is less than 1050 ticks, move from diagonal arm to backward arm
@@ -188,7 +190,7 @@ public class ethanOp extends LinearOpMode {
 
                 //REFINE HERE: Delays until the slides start moving down, low should take the longest, high the shortest
                 if (drive.getLiftPos() > 1100 && !atStart) { // HIGH
-                    if (waitArm.milliseconds() > 1000 && !atStart) { //WAIT 1000 original ms, since you don't want to crash slides while arm is moving
+                    if (waitArm.milliseconds() > 1200 && !atStart) { //WAIT 1000 original ms, since you don't want to crash slides while arm is moving
                         drive.liftToPosition(-20);
                         waitArm.reset();
                     }
@@ -256,7 +258,7 @@ public class ethanOp extends LinearOpMode {
                 }
             }
 
-            if (gamepad1.dpad_up) { //Manual Up, also sleeps a bit
+            if (gamepad1.left_trigger > 0) { //Manual Up, also sleeps a bit
                 Constants.liftSpeed = 0.8;
                 drive.liftToPosition(drive.getLiftPos() + 60);
                 sleep(100);

@@ -57,7 +57,7 @@ import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kV;
 @Config
 public class SampleMecanumDrive extends MecanumDrive {
 
-    public static int [] heights = {258, 195, 136, 70, 0};
+    public static int [] coneHeights = {0, 70, 136, 195, 258};
 
 
     public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(9, 0, 1);
@@ -205,7 +205,8 @@ public class SampleMecanumDrive extends MecanumDrive {
         } else if (height.equals("high")) {
             liftToPosition(Constants.highLift);
         } else if (height.equals("sideCone")) {
-            liftToPosition(heights[heights.length - 1 - Constants.countCones]);
+            liftToPosition(coneHeights[4 - Constants.countCones]);
+            Constants.countCones++;
         } else if (height.equals("zero")) {
             liftToPosition(0);
         }
@@ -283,6 +284,10 @@ public class SampleMecanumDrive extends MecanumDrive {
     }
     public void arm145() {
         arm.setPosition(Constants.arm145ANGLE);
+    }
+
+    public void armAuton() {
+        arm.setPosition(Constants.autonScoreAngle);
     }
 
    public void clawOpen() {
