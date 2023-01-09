@@ -5,32 +5,25 @@ package org.firstinspires.ftc.teamcode.comp;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
-import com.acmerobotics.roadrunner.trajectory.Trajectory;
-import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
 import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryAccelerationConstraint;
 import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryVelocityConstraint;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.drive.DriveConstants;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
-import org.firstinspires.ftc.teamcode.vision.AprilTagDetectionPipeline;
-import org.openftc.easyopencv.OpenCvCamera;
 
 @Autonomous
-public class leftAuton extends LinearOpMode {
+public class leftAutonOneSensor extends LinearOpMode {
 
     TrajectorySequence toPreload;
     TrajectorySequence toLoad;
     TrajectorySequence toDeposit;
     TrajectorySequence toPark;
-    DistanceSensor loadSensor;
-    DistanceSensor depositSensor;
+    DistanceSensor distanceSensor;
 
     public static int [] coneHeights = {0, 70, 136, 195, 258};
 
@@ -43,8 +36,7 @@ public class leftAuton extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
-        loadSensor = hardwareMap.get(DistanceSensor.class, "loadSensor");
-        depositSensor = hardwareMap.get(DistanceSensor.class, "depositSensor");
+        distanceSensor = hardwareMap.get(DistanceSensor.class, "distanceSensor");
         Pose2d startPose = new Pose2d(-35, -61, Math.toRadians(180));
 
 
@@ -59,15 +51,15 @@ public class leftAuton extends LinearOpMode {
 
         toPreload = drive.trajectorySequenceBuilder(startPose)
                 .lineToConstantHeading(new Vector2d(-35, -12), slowVelocityConstraint, slowAccelerationConstraint)
-                .splineToConstantHeading(new Vector2d(-26, yPos), Math.toRadians(0), slowVelocityConstraint, slowAccelerationConstraint)
+                .splineToConstantHeading(new Vector2d(-24, yPos), Math.toRadians(0), slowVelocityConstraint, slowAccelerationConstraint) //26
                 .addTemporalMarker(0.5, () -> drive.sidewayArm())
                 .build();
         toLoad = drive.trajectorySequenceBuilder(toPreload.end())
-                .lineTo(new Vector2d(-57, yPos), fastVelocityConstraint, fastAccelerationConstraint)
+                .lineTo(new Vector2d(-57.5, yPos), fastVelocityConstraint, fastAccelerationConstraint) //57
                 .addTemporalMarker(0.5, () -> drive.clawOpen())
                 .build();
         toDeposit = drive.trajectorySequenceBuilder(toLoad.end())
-                .lineToConstantHeading(new Vector2d(-24.5, yPos))
+                .lineToConstantHeading(new Vector2d(-24, yPos))
                 .addTemporalMarker(0.5, () -> drive.sidewayArm())
                 .build();
         if (signalZonePos == 1) {
@@ -119,11 +111,14 @@ public class leftAuton extends LinearOpMode {
 
             // RELOCALIZATION
             Pose2d myXPose = drive.getPoseEstimate();
-            double xDistanceVal = loadSensor.getDistance(DistanceUnit.INCH);
+            double xDistanceVal = distanceSensor.getDistance(DistanceUnit.INCH);
             double xCoord = -72 + xDistanceVal + distanceToXSensor;
             if(xCoord>=-53) xCoord = -56;
             drive.setPoseEstimate(new Pose2d(xCoord,myXPose.getY(), myXPose.getHeading()));
             telemetry.addData("xCoord: ", xCoord);
+            if(xCoord == -56) {
+                telemetry.addData("It RELOCALIZEDDDDDDDDD: ", xCoord);
+            }
             telemetry.update();
 
             drive.clawClose();
@@ -132,13 +127,6 @@ public class leftAuton extends LinearOpMode {
             drive.liftConfig("high");
             sleep(200);
             drive.followTrajectorySequence(toDeposit);
-            Pose2d myYPose = drive.getPoseEstimate();
-            double yDistanceVal = depositSensor.getDistance(DistanceUnit.INCH);
-            double yCoord = -yDistanceVal + distanceToYSensor;
-            if (yDistanceVal >= 5) {
-                yCoord = myYPose.getY();
-            }
-            drive.setPoseEstimate(new Pose2d(myYPose.getX(),yCoord, myYPose.getHeading()));
         }
     }
 }

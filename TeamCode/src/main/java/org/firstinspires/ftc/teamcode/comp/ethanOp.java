@@ -86,6 +86,7 @@ public class ethanOp extends LinearOpMode {
         limitSwitch = hardwareMap.get(TouchSensor.class, "limitSwitch");
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         drive.setPoseEstimate(PoseStorage.currentPose);
+        Constants.armBackwardPos = 0.98;
         waitForStart();
 
         //Resets count for lift and lift motor encoders

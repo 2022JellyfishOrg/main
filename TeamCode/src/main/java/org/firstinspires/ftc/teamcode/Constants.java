@@ -19,7 +19,7 @@ public class Constants {
     public static final double autonScoreAngle = 0.635;
     public static final double armSidewayPos = 0.695;
     public static final double armPrevBackPos = 0.9;
-    public static final double armBackwardPos = 0.98;
+    public static double armBackwardPos = 0.985;
 
     // Side cones
     public static int countCones = 0; // number of side cones (changes value)
