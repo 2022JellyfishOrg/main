@@ -45,7 +45,6 @@ public class RightAutonSequences extends LinearOpMode {
         toPreload = drive.trajectorySequenceBuilder(startPose)
                 .lineToConstantHeading(new Vector2d(36, -20))
                 .splineToSplineHeading(preloadPose, Math.toRadians(150))
-                .addTemporalMarker(0.5, () -> drive.forwardArm())
                 .build();
         toLoad = drive.trajectorySequenceBuilder(depositPose)
                 .lineToSplineHeading(new Pose2d(45, -12, Math.toRadians(0)))
