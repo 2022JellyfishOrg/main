@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.drive.DriveConstants;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
+import org.firstinspires.ftc.teamcode.drive.opmode.PoseStorage;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 
 @Autonomous
@@ -150,5 +151,6 @@ public class leftAutonAsync extends LinearOpMode {
             }
             drive.setPoseEstimate(new Pose2d(myYPose.getX(), yCoord, myYPose.getHeading()));
         }
+        PoseStorage.currentPose = drive.getPoseEstimate();
     }
 }

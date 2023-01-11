@@ -32,6 +32,7 @@ package org.firstinspires.ftc.teamcode.comp;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
+import com.acmerobotics.roadrunner.localization.TwoTrackingWheelLocalizer;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -44,18 +45,22 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
+import org.firstinspires.ftc.teamcode.drive.TwoWheelTrackingLocalizer;
 import org.firstinspires.ftc.teamcode.drive.opmode.PoseStorage;
 //
 
 @TeleOp
 public class ethanOp extends LinearOpMode {
+
+
+
     //Some timers and variables
     ElapsedTime registerRightBumper = new ElapsedTime();
     ElapsedTime registerLeftBumper = new ElapsedTime();
-
     ElapsedTime registerA = new ElapsedTime();
-    ElapsedTime registerB = new ElapsedTime();
     ElapsedTime registerX = new ElapsedTime();
+    ElapsedTime registerB = new ElapsedTime();
+    ElapsedTime registerDPAD = new ElapsedTime();
     TouchSensor limitSwitch;
 
     ElapsedTime waitArm = new ElapsedTime();
@@ -70,23 +75,33 @@ public class ethanOp extends LinearOpMode {
     boolean begin = true;
     boolean atHome = true; //should actually be called atHome
     boolean sideConeActive = false;
+    boolean groundActive = false;
 
     //Cone heights
-    int [] coneHeights = {70, 136, 195, 258};
+    int [] coneHeights = {0, 70, 136, 195, 258};
     int sideConeCount = 0;
 
     //If it's true, cycling, if not, owning
     boolean toggleSwitch = true;
+
+    boolean isTurning = false;
     //If it equals 1, it'll alternate between low, medium, and high
+
 
     @Override
     public void runOpMode() throws InterruptedException {
         //Probably don't need to know
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+        TwoTrackingWheelLocalizer localizer = new TwoWheelTrackingLocalizer(hardwareMap, drive);
         limitSwitch = hardwareMap.get(TouchSensor.class, "limitSwitch");
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         drive.setPoseEstimate(PoseStorage.currentPose);
+
         Constants.armBackwardPos = 0.98;
+
+        drive.setPoseEstimate(PoseStorage.currentPose);
+        int turnAngle = 0;
+
         waitForStart();
 
         //Resets count for lift and lift motor encoders
@@ -105,11 +120,22 @@ public class ethanOp extends LinearOpMode {
             if (driveType.equals("robot")) {
                 drive.setWeightedDrivePower(
                         new Pose2d(
-                                (gamepad1.left_stick_y * 0.4) * (1+gamepad1.right_trigger), //Change speeds to 0.6? So that cycles are faster?
-                                (gamepad1.left_stick_x * 0.4) * (1+gamepad1.right_trigger), //Same for here as well
-                                (-gamepad1.right_stick_x  * 0.35) * (1+gamepad1.right_trigger)
+                                //The following starts at a base of 40%, but with each tick of the trigger, it increases the speed by 0.006, essentially allowing it to reach 100% from 40%
+                                //(gamepad1.left_stick_y * 0.4) + ((100*gamepad1.right_trigger)*0.006), makes sense of this, but now we simplify:
+                                (gamepad1.left_stick_y * 0.4) + (gamepad1.right_trigger*0.6),
+                                (gamepad1.left_stick_x * 0.4) + (gamepad1.right_trigger*0.6),
+                                //Same math here, base at 35%, but increases by 0.0065
+                                (-gamepad1.right_stick_x  * 0.35) + (gamepad1.right_trigger*0.65)
                         )
                 );
+            } else if (driveType.equals("turn")) {
+                if (!isTurning) {
+                    drive.turnAsync(Math.toRadians(turnAngle)); // only wanna do it once
+                    isTurning = true;
+                }
+                if (!drive.isBusy()) { // if it's done turning
+                    driveType = "robot";
+                }
             }
 
             // Update everything. Odometry. Etc.
@@ -118,6 +144,11 @@ public class ethanOp extends LinearOpMode {
             // Read pose
             Pose2d poseEstimate = drive.getPoseEstimate();
 
+            if (drive.getLiftPos() < 15 & atHome) {
+                Constants.armBackwardPos= 0.98;
+            } else if (!atHome) {
+                Constants.armBackwardPos = 0.97;
+            }
             //Reset Lift
             if (gamepad1.left_bumper) {
                 if (registerLeftBumper.milliseconds() > 300) {
@@ -192,31 +223,31 @@ public class ethanOp extends LinearOpMode {
                 //REFINE HERE: Delays until the slides start moving down, low should take the longest, high the shortest
                 if (drive.getLiftPos() > 1100 && !atStart) { // HIGH
                     if (waitArm.milliseconds() > 1200 && !atStart) { //WAIT 1000 original ms, since you don't want to crash slides while arm is moving
-                        drive.liftToPosition(-20);
+                        drive.liftToPosition(0);
                         waitArm.reset();
                     }
                 } else if (drive.getLiftPos() > 600 && !atStart) { //MEDIUM
                     if (waitArm.milliseconds() > 1200 && !atStart) { //WAIT 1200 ms
-                        drive.liftToPosition(-20);
+                        drive.liftToPosition(0);
                         waitArm.reset();
                     }
                 } else { //LOW
                     if (waitArm.milliseconds() > 1600 && !atStart) { //WAIT 1600 ms, since you don't want to crash slides while arm is moving
-                        drive.liftToPosition(-20);
+                        drive.liftToPosition(0);
                         waitArm.reset();
                     }
                 }
             }
 
             //Toggling between cycling and owning
-            if (gamepad1.b) {
-                if (registerB.milliseconds() > 300) {
+            if (gamepad1.x) {
+                if (registerX.milliseconds() > 300) {
                     if (toggleSwitch) { //If cycling, go to owning
                         toggleSwitch = false;
                     } else { //If owning, go to cycling
                         toggleSwitch = true;
                     }
-                    registerB.reset();
+                    registerX.reset();
                 }
             }
 
@@ -226,7 +257,7 @@ public class ethanOp extends LinearOpMode {
                 if (registerA.milliseconds() > 300) {
                     sideConeActive = true;
                     int desiredPos = coneHeights[sideConeCount];
-                    if (sideConeCount == 3) { //max cone height/pressed 3 times, go back to 2nd cone height
+                    if (sideConeCount == 4) { //max cone height/pressed 3 times, go back to 2nd cone height
                         sideConeCount = 0;
                     } else {
                         sideConeCount++;
@@ -237,37 +268,50 @@ public class ethanOp extends LinearOpMode {
             }
 
             //To Reset the Lift, manually
-            if (gamepad1.x && limitSwitch.isPressed()) {
-                if (registerX.milliseconds() > 300) {
-                    drive.resetLiftEncoders();
-                    registerX.reset();
-                }
-            }
-
-            if (gamepad1.y && setting) { //Turn 180 clockwise
-                if (registerY.milliseconds() > 300) {
-                    //setting the targetPos
-                    target180 = poseEstimate.getHeading() + 180;
-                    //if it's outside of the turning area
-                    if (target180 > 360) {
-                        target180 = target180 - 360;
-                    }
-
-                    drive.turn(target180); //Change to negative to turn the other way
-
-                    registerY.reset();
-                }
+            if (limitSwitch.isPressed()) {
+                drive.resetLiftEncoders();
             }
 
             if (gamepad1.left_trigger > 0) { //Manual Up, also sleeps a bit
                 Constants.liftSpeed = 0.8;
                 drive.liftToPosition(drive.getLiftPos() + 60);
                 sleep(100);
-            } else if (gamepad1.dpad_down) { //Manual Down, also sleeps a bit
-                Constants.liftSpeed = 0.8;
-                drive.liftToPosition(drive.getLiftPos() - 60);
-                sleep(100);
             }
+
+            if (gamepad1.dpad_up || gamepad1.dpad_left || gamepad1.dpad_right || gamepad1.dpad_down) {
+                if (registerDPAD.milliseconds() > 300) {
+                    int initAngle = (int) Math.toDegrees(poseEstimate.getHeading());
+                    isTurning = false;
+                    if (gamepad1.dpad_up) {
+                        turnAngle = 270 - initAngle;
+                    } else if (gamepad1.dpad_left) {
+                        turnAngle = 180  - initAngle;
+                    } else if (gamepad1.dpad_right) {
+                        turnAngle = -initAngle;
+                    } else if (gamepad1.dpad_down){
+                        turnAngle = 90 - initAngle;
+                    }
+                    registerDPAD.reset();
+                }
+            }
+
+            if (gamepad1.b) {
+                if (registerB.milliseconds() > 300) {
+                    if (!groundActive) {
+                        sideConeActive = true; // yes this isn't a side cone but it's easier to just use this variable to tell the code to overwrite the cycling/owning lift code
+                        drive.clawClose();
+                        sleep(300);
+                        drive.liftToPosition(100);
+                        groundActive = true;
+                    } else {
+                        drive.clawOpen();
+                        drive.liftToPosition(0);
+                        groundActive = false;
+                    }
+                }
+            }
+
+
 
             telemetry.addData("(0 is 2nd cone) sideConeCount:", sideConeCount);
             telemetry.addData("x", poseEstimate.getX());

@@ -249,9 +249,6 @@ public class SampleMecanumDrive extends MecanumDrive {
     }
 
     public void liftToPosition (int ticks) {
-        if (ticks == 0) {
-            Constants.liftSpeed = 0.8;
-        }
         lift1.setTargetPosition(ticks);
         lift2.setTargetPosition(ticks);
         lift1.setPower(Constants.liftSpeed);
